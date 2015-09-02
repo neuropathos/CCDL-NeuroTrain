@@ -7,10 +7,10 @@ FPS = 100
 
 #Global Variables to be used through our program
 
-WINDOWWIDTH = 800
+WINDOWWIDTH = 500
 WINDOWHEIGHT = 300
 LINETHICKNESS = 10
-PADDLESIZE = 200
+PADDLESIZE = (WINDOWHEIGHT/2)
 PADDLEOFFSET = 20
 
 # Set up the colours
