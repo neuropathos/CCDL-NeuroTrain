@@ -11,6 +11,7 @@ import gui
 import threading
 import time
 import Png
+import fixation
 
 Png.SPTruVal =  0
 SPTruFreq = 0
@@ -67,9 +68,11 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         
         self.start_btn = wx.Button(self, wx.ID_ANY, "Start", size=(100, 25))
         self.stop_btn = wx.Button(self, wx.ID_ANY, "Stop", size=(100, 25))
+        self.Base_btn = wx.Button(self, wx.ID_ANY, "Baseline", size=(100, 25))
         self.Bind(wx.EVT_BUTTON, self.on_start, self.start_btn)
         self.Bind(wx.EVT_BUTTON, self.on_stop, self.stop_btn)
-        
+        self.Bind(wx.EVT_BUTTON, self.on_Base, self.Base_btn)
+      
         
     def on_start(self, evt):
         """Starts the visualizing thread"""
@@ -78,6 +81,14 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         visThread.start()
         self.update_interface() 
         Png.main()
+		
+    def on_Base(self, evt):
+        """Starts the visualizing thread"""
+        self.visualizing = True
+        visThread = threading.Thread(group=None, target=self.update_meter)
+        visThread.start()
+        self.update_interface() 
+        fixation.main()
     
     def on_stop(self, evt):
         """Stops the thread"""
@@ -101,6 +112,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
  
             if self.visualizing:
                 self.start_btn.Disable()
+                self.Base_btn.Disable()
                 self.stop_btn.Enable()
                 self.meter.Enable()
                 self.meter.SetBandsColour(wx.Colour(255,0,0),
@@ -112,12 +124,14 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                                           wx.Colour(100,100,100))
 
                 self.start_btn.Enable()
+                self.Base_btn.Enable()
                 self.stop_btn.Disable()
                 self.meter.Disable()
         else:
             self.selector.Disable()
             self.start_btn.Disable()
             self.stop_btn.Disable()
+            self.Base_btn.Disable()
             self.meter.Disable()
             self.meter.SetBandsColour(wx.Colour(100,100,100),
                                       wx.Colour(100,100,100),
@@ -130,7 +144,8 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         box1 = wx.BoxSizer(wx.HORIZONTAL)
         box1.Add(self.start_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         box1.Add(self.stop_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        
+        box1.Add(self.Base_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
+		
         box2 = wx.BoxSizer( wx.VERTICAL )
         box2.Add(self.selector, 0, wx.EXPAND | wx.HORIZONTAL)
         box2.Add(box1)
@@ -156,6 +171,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
     def on_select_channel(self, evt):
         """Updates the selected channel"""
         box_id = self.selector.GetSelection()
+        print(box_id)
         sensor_id = core.variables.SENSORS[box_id]
         channel_id = core.variables.CHANNELS.index(sensor_id)
         self.channel = channel_id
@@ -176,6 +192,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             SPFreqs = freq
             SPVals = density
             Png.SPTruVal = SPVals[10]
+            fixation.val = SPVals[10]
             SPTruFreq = SPFreqs[10]
             #print(SPTruVal)
             #print(SPTruFreq)

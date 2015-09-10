@@ -1,10 +1,11 @@
 import pygame, sys
 from pygame.locals import *
 import time
+
 # Number of frames per second
 # Change this value to speed up or slow down your game
-FPS = 100
-
+FPS = 50
+Threshold = 1.0  #this is used to determine whether the paddle is high or low
 #Global Variables to be used through our program
 
 WINDOWWIDTH = 500
@@ -12,6 +13,9 @@ WINDOWHEIGHT = 300
 LINETHICKNESS = 10
 PADDLESIZE = (WINDOWHEIGHT/2)
 PADDLEOFFSET = 20
+pygame.mixer.init()
+coin = pygame.mixer.Sound('mariocoin.wav')
+
 
 # Set up the colours
 BLACK     = (0  ,0  ,0  )
@@ -73,6 +77,9 @@ def checkPointScored(paddle1, ball, score, ballDirX):
     #1 point for hitting the ball
     elif ballDirX == -1 and paddle1.right == ball.left and paddle1.top < ball.top and paddle1.bottom > ball.bottom:
         score += 1
+        #pygame.mixer.music.load('mariocoin.wav')
+        coin.play()
+		
         return score
     #5 points for beating the other paddle
     elif ball.right == WINDOWWIDTH - LINETHICKNESS:
@@ -154,14 +161,14 @@ def main():
             if event.type == QUIT:
                 pygame.quit()
                 print "Good Night!"
-                sys.exit()
+                #sys.exit()
              # mouse movement commands
             #elif event.type == MOUSEMOTION:
             #    mousex, mousey = event.pos
             #    paddle1.y = mousey
-        if SPTruVal > 0:  
+        if SPTruVal < Threshold:  
                 paddle1.y	=  (WINDOWHEIGHT - PADDLESIZE)
-        elif SPTruVal <= 0:
+        elif SPTruVal >= Threshold:
             paddle1.y = 0
 			
 			
