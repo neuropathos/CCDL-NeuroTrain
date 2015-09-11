@@ -61,8 +61,10 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         self.meter = meter
         
         sensors = [core.variables.SENSOR_NAMES[i] for i in core.variables.SENSORS]
+        sensors.append("FC5/FC6")
+        print(sensors) #debug
         selector = wx.RadioBox(self, wx.ID_ANY, "Select Channel", wx.DefaultPosition,
-                               wx.DefaultSize, sensors, 7)
+                               wx.DefaultSize, sensors, 8)
         self.selector = selector
         self.Bind(wx.EVT_RADIOBOX, self.on_select_channel, self.selector)
         
@@ -171,10 +173,13 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
     def on_select_channel(self, evt):
         """Updates the selected channel"""
         box_id = self.selector.GetSelection()
-        print(box_id)
-        sensor_id = core.variables.SENSORS[box_id]
-        channel_id = core.variables.CHANNELS.index(sensor_id)
-        self.channel = channel_id
+        print(box_id) #debug
+        print
+        
+            sensor_id = core.variables.SENSORS[box_id]
+            print(core.variables.SENSORS[box_id]) #debug
+            channel_id = core.variables.CHANNELS.index(sensor_id)
+            self.channel = channel_id
     
     
     def analyze_data(self):
