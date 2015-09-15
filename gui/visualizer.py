@@ -174,13 +174,16 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         """Updates the selected channel"""
         box_id = self.selector.GetSelection()
         print(box_id) #debug
-        print
-        
+        if box_id == 14:
+            self.channel = 15
+        else:
             sensor_id = core.variables.SENSORS[box_id]
-            print(core.variables.SENSORS[box_id]) #debug
-            channel_id = core.variables.CHANNELS.index(sensor_id)
+            #print(core.variables.SENSORS[box_id]) #debug
+           
+            channel_id = core.variables.CHANNELS.index(sensor_id) #VITAL; seems to just say which channel name in the list?  Bizarre.  I must be missing osmething
+            print(channel_id)
             self.channel = channel_id
-    
+    #NB: 3/6, 10/13;   4 and 11 are the channel ids for what I want.
     
     def analyze_data(self):
         """Creates the periodogram of a series"""
@@ -188,9 +191,18 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         if self.sensor_data.shape[0] >= sr * self.length:
             nperseg = self.window * sr
             noverlap = int(self.overlap * float(sr))
-            freq, density = sig.welch(self.sensor_data[:, self.channel], fs=sr, nperseg = nperseg,
-                                      noverlap = noverlap, scaling='density')
-
+            if self.channel == 15: #This is for when the ratio of channels is selected.
+            
+                freq, density = sig.welch(self.sensor_data[:, 4], fs=sr, nperseg = nperseg,
+                                          noverlap = noverlap, scaling='density')
+      
+                freqb, densityb = sig.welch(self.sensor_data[:, 11], fs=sr, nperseg = nperseg,
+                                          noverlap = noverlap, scaling='density')
+                freq = (freq + freqb)/2
+                density = (density + densityb)/2
+            else: #This is for all single channels
+                freq, density = sig.welch(self.sensor_data[:, self.channel], fs=sr, nperseg = nperseg,
+                                          noverlap = noverlap, scaling='density')
             density = sp.log(density)[1:]
             freq = freq[1:]
             self.meter.SetData(density[0:32], offset=0, size=32)
