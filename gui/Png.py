@@ -1,20 +1,30 @@
 import pygame, sys
 from pygame.locals import *
 import time
-
+SPTruVal = 0 #To be removed 
 # Number of frames per second
 # Change this value to speed up or slow down your game
 FPS = 50
 Threshold = 1.0  #this is used to determine whether the paddle is high or low
 #Global Variables to be used through our program
 
-WINDOWWIDTH = 500
-WINDOWHEIGHT = 300
+pygame.display.init()
+disp = pygame.display.Info()
+WINDOWWIDTH = disp.current_w - 50
+WINDOWHEIGHT = disp.current_h -200
+size = [WINDOWWIDTH,WINDOWHEIGHT]
+# screen = pygame.display.set_mode(size)
+# background = pygame.Surface(screen.get_size())
+
+
+
 LINETHICKNESS = 10
-PADDLESIZE = (WINDOWHEIGHT/2)
+PADDLESIZE = (10)
 PADDLEOFFSET = 20
 pygame.mixer.init()
 coin = pygame.mixer.Sound('mariocoin.wav')
+
+
 
 
 # Set up the colours
@@ -26,8 +36,8 @@ def drawArena():
     DISPLAYSURF.fill((0,0,0))
     #Draw outline of arena
     pygame.draw.rect(DISPLAYSURF, WHITE, ((0,0),(WINDOWWIDTH,WINDOWHEIGHT)), LINETHICKNESS*2)
-    #Draw centre line
-    pygame.draw.line(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2),0),((WINDOWWIDTH/2),WINDOWHEIGHT), (LINETHICKNESS/4))
+    
+
 
 
 #Draws the paddle
@@ -42,67 +52,28 @@ def drawPaddle(paddle):
     pygame.draw.rect(DISPLAYSURF, WHITE, paddle)
 
 
-#draws the ball
-def drawBall(ball):
-    pygame.draw.rect(DISPLAYSURF, WHITE, ball)
+def drawSprite(b):  
+    if b.rect.bottom > WINDOWHEIGHT - LINETHICKNESS:
+        b.rect.bottom = WINDOWHEIGHT - LINETHICKNESS
+    #Stops paddle moving too high
+    elif b.rect.top < LINETHICKNESS:
+        b.rect.top = LINETHICKNESS
+ 
 
-#moves the ball returns new position
-def moveBall(ball, ballDirX, ballDirY):
-    ball.x += ballDirX
-    ball.y += ballDirY
-    return ball
+    DISPLAYSURF.blit(b.image, b.rect)
 
-#Checks for a collision with a wall, and 'bounces' ball off it.
-#Returns new direction
-def checkEdgeCollision(ball, ballDirX, ballDirY):
-    if ball.top == (LINETHICKNESS) or ball.bottom == (WINDOWHEIGHT - LINETHICKNESS):
-        ballDirY = ballDirY * -1
-    if ball.left == (LINETHICKNESS) or ball.right == (WINDOWWIDTH - LINETHICKNESS):
-        ballDirX = ballDirX * -1
-    return ballDirX, ballDirY
 
-#Checks is the ball has hit a paddle, and 'bounces' ball off it.     
-def checkHitBall(ball, paddle1, paddle2, ballDirX):
-    if ballDirX == -1 and paddle1.right == ball.left and paddle1.top < ball.top and paddle1.bottom > ball.bottom:
-        return -1
-    elif ballDirX == 1 and paddle2.left == ball.right and paddle2.top < ball.top and paddle2.bottom > ball.bottom:
-        return -1
-    else: return 1
+
+
 
 #Checks to see if a point has been scored returns new score
-def checkPointScored(paddle1, ball, score, ballDirX):
-    #reset points if left wall is hit
-    if ball.left == LINETHICKNESS: 
-        return 0
-    #1 point for hitting the ball
-    elif ballDirX == -1 and paddle1.right == ball.left and paddle1.top < ball.top and paddle1.bottom > ball.bottom:
-        score += 1
-        #pygame.mixer.music.load('mariocoin.wav')
-        coin.play()
-		
-        return score
-    #5 points for beating the other paddle
-    elif ball.right == WINDOWWIDTH - LINETHICKNESS:
-        score += 5
-        return score
-    #if no points scored, return score unchanged
+def checkPointScored(paddle1, score): # paddle1, ball, score, ballDirX):
+
+    if 1 == 2:
+        a = true
     else: return score
 
-#Artificial Intelligence of computer player 
-def artificialIntelligence(ball, ballDirX, paddle2):
-    #If ball is moving away from paddle, center bat
-    if ballDirX == -1:
-        if paddle2.centery < (WINDOWHEIGHT/2):
-            paddle2.y += 1
-        elif paddle2.centery > (WINDOWHEIGHT/2):
-            paddle2.y -= 1
-    #if ball moving towards bat, track its movement. 
-    elif ballDirX == 1:
-        if paddle2.centery < ball.centery:
-            paddle2.y += 1
-        else:
-            paddle2.y -=1
-    return paddle2
+
 
 #Displays the current score on the screen 
 def displayScore(score):
@@ -111,7 +82,7 @@ def displayScore(score):
     resultRect.topleft = (WINDOWWIDTH - 150, 25)
     DISPLAYSURF.blit(resultSurf, resultRect)
 	
-#Displays the current score on the screen 
+#Displays the Electrode Value on the screen  for debugging
 def displaySPTruVal(SPTruVal):
     resultSurf = BASICFONT.render('SPVal = %s' %(SPTruVal), True, WHITE)
     resultRect = resultSurf.get_rect()
@@ -132,27 +103,28 @@ def main():
     pygame.display.set_caption('Pong')
 
     #Initiate variable and set starting positions
-    #any future changes made within rectangles
-    ballX = WINDOWWIDTH/2 - LINETHICKNESS/2
-    ballY = WINDOWHEIGHT/2 - LINETHICKNESS/2
     playerOnePosition = (WINDOWHEIGHT - PADDLESIZE) /2
-    playerTwoPosition = (WINDOWHEIGHT - PADDLESIZE) /2
     score = 0
 
-    #Keeps track of ball direction
-    ballDirX = -1 ## -1 = left 1 = right
-    ballDirY = -1 ## -1 = up 1 = down
 
-    #Creates Rectangles for ball and paddles.
-    paddle1 = pygame.Rect(PADDLEOFFSET,playerOnePosition, LINETHICKNESS,PADDLESIZE)
-    paddle2 = pygame.Rect(WINDOWWIDTH - PADDLEOFFSET - LINETHICKNESS, playerTwoPosition, LINETHICKNESS,PADDLESIZE)
-    ball = pygame.Rect(ballX, ballY, LINETHICKNESS, LINETHICKNESS)
 
+    #Creates Rectangles for ball and paddles also sprite.
+    
+    paddle1 = pygame.Rect(WINDOWWIDTH/2 - LINETHICKNESS/2, playerOnePosition, LINETHICKNESS,PADDLESIZE)
+    
+    
+    b = pygame.sprite.Sprite() # create sprite
+    b.image = pygame.image.load("Glider.png").convert() # load ball image
+    b.image.convert_alpha()
+    b.rect = b.image.get_rect() # use image extent values
+    b.rect.topleft = [WINDOWWIDTH/2, WINDOWHEIGHT/2] # put the image in the top left corner
+    print(b.rect.y)
+    
     #Draws the starting position of the Arena
     drawArena()
     drawPaddle(paddle1)
-    drawPaddle(paddle2)
-    drawBall(ball)
+
+
 
     pygame.mouse.set_visible(0) # make cursor invisible
 
@@ -162,30 +134,20 @@ def main():
                 pygame.quit()
                 print "Good Night!"
                 #sys.exit()
-             # mouse movement commands
-            #elif event.type == MOUSEMOTION:
-            #    mousex, mousey = event.pos
-            #    paddle1.y = mousey
         if SPTruVal < Threshold:  
-                paddle1.y	=  (WINDOWHEIGHT - PADDLESIZE)
+                b.rect.y	=  b.rect.y - 1#(WINDOWHEIGHT - PADDLESIZE)
         elif SPTruVal >= Threshold:
-            paddle1.y = 0
+            b.rect.y = b.rect.y + 1
 			
 			
 			
-
+        
         drawArena()
-        drawPaddle(paddle1)
-        drawPaddle(paddle2)
-        drawBall(ball)
+        drawSprite(b)
+        #drawPaddle(paddle1)
 
-        ball = moveBall(ball, ballDirX, ballDirY)
-        ballDirX, ballDirY = checkEdgeCollision(ball, ballDirX, ballDirY)
-        score = checkPointScored(paddle1, ball, score, ballDirX)
-        #score = SPTruVal
-        #print(SPTruVal)
-        ballDirX = ballDirX * checkHitBall(ball, paddle1, paddle2, ballDirX)
-        paddle2 = artificialIntelligence (ball, ballDirX, paddle2)
+        score = checkPointScored(paddle1, score)#paddle1, ball, score, ballDirX)
+ 
 
         displayScore(score)
         displaySPTruVal(round(SPTruVal,3))
