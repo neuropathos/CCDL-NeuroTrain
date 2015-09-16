@@ -62,7 +62,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         
         sensors = [core.variables.SENSOR_NAMES[i] for i in core.variables.SENSORS]
         sensors.append("FC5/FC6")
-        print(sensors) #debug
+        #print(sensors) #debug
         selector = wx.RadioBox(self, wx.ID_ANY, "Select Channel", wx.DefaultPosition,
                                wx.DefaultSize, sensors, 8)
         self.selector = selector
@@ -173,7 +173,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
     def on_select_channel(self, evt):
         """Updates the selected channel"""
         box_id = self.selector.GetSelection()
-        print(box_id) #debug
+        #print(box_id) #debug
         if box_id == 14:
             self.channel = 15
         else:
@@ -181,7 +181,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             #print(core.variables.SENSORS[box_id]) #debug
            
             channel_id = core.variables.CHANNELS.index(sensor_id) #VITAL; seems to just say which channel name in the list?  Bizarre.  I must be missing osmething
-            print(channel_id)
+            #print(channel_id) #debug
             self.channel = channel_id
     #NB: 3/6, 10/13;   4 and 11 are the channel ids for what I want.
     
@@ -207,9 +207,13 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             freq = freq[1:]
             self.meter.SetData(density[0:32], offset=0, size=32)
             SPFreqs = freq
+            # print("TESTING")
+            # print SPFreqs[4] #this gives 5
             SPVals = density
-            Png.SPTruVal = SPVals[10]
-            fixation.val = SPVals[10]
-            SPTruFreq = SPFreqs[10]
+            Png.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21]))
+            fixation.val = (np.average(SPVals[2:7])/np.average(SPVals[10:21]))
+            if fixation.Baseline == True:
+                Png.baseline = fixation.Threshold
+                Png.deviance = fixation.stdev
             #print(SPTruVal)
             #print(SPTruFreq)
