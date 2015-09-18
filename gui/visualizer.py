@@ -11,7 +11,7 @@ import gui
 import threading
 import time
 import Png
-import fixation
+import fixation #probably not needed anymore;
 
 Png.SPTruVal =  0
 SPTruFreq = 0
@@ -126,7 +126,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                                           wx.Colour(100,100,100))
 
                 self.start_btn.Enable()
-                self.Base_btn.Enable()
+                self.Base_btn.Disable() #this is off for now; change to ENABLE if I have use in the future.
                 self.stop_btn.Disable()
                 self.meter.Disable()
         else:
@@ -210,10 +210,9 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             # print("TESTING")
             # print SPFreqs[4] #this gives 5
             SPVals = density
-            Png.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21]))
-            fixation.val = (np.average(SPVals[2:7])/np.average(SPVals[10:21]))
-            if fixation.Baseline == True:
-                Png.baseline = fixation.Threshold
-                Png.deviance = fixation.stdev
+            Png.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21])) #4-8 and 12-22
+            Png.HiNoise = SPVals[0] #1 Hz
+            Png.LoNoise = np.average(SPVals[38:58]) #40-59 Hz
+            #print(Png.HiNoise, Png.LoNoise, Png.SPTruVal)
             #print(SPTruVal)
             #print(SPTruFreq)

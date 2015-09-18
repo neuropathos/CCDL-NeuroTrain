@@ -3,6 +3,8 @@ from random import randrange
  
 MAX_STARS  = 250
 STAR_SPEED = 1
+
+
  
 def init_stars(screen):
   """ Create the starfield """
@@ -44,6 +46,9 @@ def main():
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         return
+      if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_SPACE:
+            print("Space Adventure!")
  
     screen.fill((0,0,0))
     move_and_draw_stars(screen)
