@@ -57,7 +57,7 @@ WHITE     = (255,255,255)
 YELLOW    = (255,255,0)
 ORANGE    = (255,165,0)
 RED       = (255,0,0)
-
+TURQUOISE = ( 52, 221, 221)
 #Baselining variable declarations; dummy values
 output = 0
 HiOutput = 0
@@ -71,11 +71,17 @@ consolidatedlo = []
 def Pausepoint(stage, score):
 
     #These are scores we want to keep
+
     global score1
     global score2
     global score3
     global score4
-    
+    global ontimer
+    global ontime
+    global successflag
+    global successjar
+    global Level
+
     #Black out everything on the screen
     DISPLAYSURF.fill(BLACK)
     
@@ -107,8 +113,9 @@ def Pausepoint(stage, score):
     resultRect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2-300)
     DISPLAYSURF.blit(resultSurf, resultRect)
     
-    score = 0 #We must reset the score between rounds; from here on out, it uses scoreX, where X is the trial to which the score belongs.
+
     
+        
     # I kind of did a hack job here, but basically this sets up the screen display for each stage.
     
     if stage != 0:
@@ -128,7 +135,8 @@ def Pausepoint(stage, score):
             resultRect.center = (WINDOWWIDTH-1265, (WINDOWHEIGHT-298-int(i*400/latitudes)))
             DISPLAYSURF.blit(resultSurf, resultRect)
         
-        
+        #Display the longitude lines and labels
+        #This was done in a stupid way, but it works.  Should have used a loop.
         resultSurf = BASICFONT.render("Trial 1", True, WHITE)
         resultRect = resultSurf.get_rect()
         resultRect.center = (WINDOWWIDTH-1155, WINDOWHEIGHT-250)
@@ -155,7 +163,6 @@ def Pausepoint(stage, score):
       
         
         if stage >= 2:
-            resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN STAGE 2', True, WHITE)
             pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH - 1160, WINDOWHEIGHT-300-50/increment*score1], 8) #tie Windowheight to score
             
             resultSurf = BASICFONT.render('%s Points' %(score1), True, YELLOW)
@@ -163,7 +170,6 @@ def Pausepoint(stage, score):
             resultRect.center = (WINDOWWIDTH-1155, WINDOWHEIGHT-225)
             DISPLAYSURF.blit(resultSurf, resultRect)
         if stage >= 3:
-            resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN STAGE 3', True, WHITE)
             pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH - 1010, WINDOWHEIGHT-300-50/increment*score2], 8)
             pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-1160),WINDOWHEIGHT-300-50/increment*score1),((WINDOWWIDTH-1010),WINDOWHEIGHT-300-50/increment*score2), int(LINETHICKNESS*.4)) #ie line height to previous circle
             
@@ -174,19 +180,15 @@ def Pausepoint(stage, score):
 
             
         if stage >= 4:
-            resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN STAGE 4', True, WHITE)
             pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH - 860, WINDOWHEIGHT-300-50/increment*score3], 8)
             pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-1010),WINDOWHEIGHT-300-50/increment*score2),((WINDOWWIDTH-860),WINDOWHEIGHT-300-50/increment*score3), int(LINETHICKNESS*.4))
 
-            
             resultSurf = BASICFONT.render('%s Points' %(score3), True, YELLOW)
             resultRect = resultSurf.get_rect()
             resultRect.center = (WINDOWWIDTH-855, WINDOWHEIGHT-225)
             DISPLAYSURF.blit(resultSurf, resultRect)
 
-            
         if stage >= 5:
-            resultSurf = SCOREFONT.render('Five stages have been completed. FINAL BASELINE!', True, WHITE)
             pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-860),WINDOWHEIGHT-300-50/increment*score3),((WINDOWWIDTH-710),WINDOWHEIGHT-300-50/increment*score4), int(LINETHICKNESS*.4))
             pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH - 710, WINDOWHEIGHT-300-50/increment*score4], 8)
             
@@ -194,24 +196,33 @@ def Pausepoint(stage, score):
             resultRect = resultSurf.get_rect()
             resultRect.center = (WINDOWWIDTH-705, WINDOWHEIGHT-225)
             DISPLAYSURF.blit(resultSurf, resultRect)
-  
         
-    
-    
+        if stage == 2 or stage == 3 or stage == 4:
+            displayedlevel = Level
+            if successflag == True:
+                ontime = ontime + time.time() - successjar
+                successflag = False
+            if ontime/300 > .6:
+                displayedlevel = displayedlevel + 1
 
+                resultSurf = SCOREFONT.render('LEVEL UP', True,  TURQUOISE)
+                resultRect = resultSurf.get_rect()
+                resultRect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2-250)
+                DISPLAYSURF.blit(resultSurf, resultRect)
+            elif ontime/300 < .2:
+                displayedlevel = displayedlevel - 1
+                resultSurf = SCOREFONT.render('LEVEL DOWN', True, ORANGE)
+                resultRect = resultSurf.get_rect()
+                resultRect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2-250)
+                DISPLAYSURF.blit(resultSurf, resultRect)
+                #This announces difficulty
+    return score
 
     
 #BASELINE MODULE
 def fixation(recordtick):
 
-    #declare some variables as global here
-    # global output   #Threshold for signal data
-    # global HiOutput #High Frequency noise threshold
-    # global LoOutput #Low Frequency noise threshold
-    # global deviance #Standard deviation of signal data; probably not needed
-    # global HiDev    #Standard deviation of hi freq noise;
-    # global LoDev    #Standard deviation of lo freq noise;
-    # print(HiNoise, LoNoise, SPTruVal)
+
     #Clear the screen
     DISPLAYSURF.fill(BLACK)
     
@@ -322,8 +333,7 @@ def move_and_draw_stars(DISPLAYSURF):
     if star[0] <= 1:
       star[0] = WINDOWWIDTH-500
       star[1] = randrange(0,WINDOWHEIGHT)
-    #pygame.draw.rect(DISPLAYSURF, WHITE,(star,(2,2)) )
-    DISPLAYSURF.set_at(star,(255,255,255))
+    DISPLAYSURF.set_at(star,(255,255,255)) #Turns on the next star position
 
 
 #Draws the arena the game will be played in. 
@@ -373,11 +383,9 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
     global ContinualSuccessFlag 
     global ContinualSuccessTimer 
 
-    #Start by checking for failure states
-    if HighNoiseFlag == True or LowNoiseFlag == True or SPTruVal <= Threshold:  
-        FirstSuccessFlag = False
-        ContinualSuccessFlag = False
-    else:
+    #Start by checking for success state
+
+    if SPTruVal > Threshold and HighNoiseFlag == False and HighNoiseFlag == False:
         if FirstSuccessFlag == False:       #Sees if the first round has begun;this just sets the first timer, really.
             if time.time() > ContinualSuccessTimer: #Make sure previous successes do not allow rapid-fire point generation
                 FirstSuccessFlag = True
@@ -396,6 +404,9 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
                     coin.play()                         #Award a point and give a coin!
                     ContinualSuccessTimer = time.time() + 3 #Make the timer 3 seconds forward
                     ContinualSuccessFlag = True   
+    else:
+        FirstSuccessFlag = False
+        ContinualSuccessFlag = False
        
     return score
 
@@ -408,17 +419,44 @@ def displayScore(score):
     DISPLAYSURF.blit(resultSurf, resultRect)
 
 	
-#Displays the Electrode Value on the screen  for debugging
+#Displays debugging stuff; the calling of SPTruVal here is kind of an artifact, ignore it I think
 def displaySPTruVal(SPTruVal):
-    resultSurf = BASICFONT.render('TBR = %s' %(SPTruVal), True, WHITE)
+    resultSurf = BASICFONT.render('FirstTimer = %s' %(round(FirstSuccessTimer-time.time(),3)), True, WHITE)
     resultRect = resultSurf.get_rect()
     resultRect.topleft = (WINDOWWIDTH - 300, 25)
     DISPLAYSURF.blit(resultSurf, resultRect)
-    
+    resultSurf = BASICFONT.render('ContinuedTimer = %s' %(round(ContinualSuccessTimer-time.time(),3)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 300, 40)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    if FirstSuccessFlag == True:
+        resultSurf = BASICFONT.render('Fst+', True, WHITE)
+        resultRect = resultSurf.get_rect()
+        resultRect.topleft = (WINDOWWIDTH - 300, 55)
+        DISPLAYSURF.blit(resultSurf, resultRect)
+    if ContinualSuccessFlag == True:
+        resultSurf = BASICFONT.render('Cnt+', True, WHITE)
+        resultRect = resultSurf.get_rect()
+        resultRect.topleft = (WINDOWWIDTH - 375, 55)
+        DISPLAYSURF.blit(resultSurf, resultRect)
+    if HighNoiseFlag == True:
+        resultSurf = BASICFONT.render('hinoi', True, WHITE)
+        resultRect = resultSurf.get_rect()
+        resultRect.topleft = (WINDOWWIDTH - 300, 70)
+        DISPLAYSURF.blit(resultSurf, resultRect)
+    if LowNoiseFlag == True:
+        resultSurf = BASICFONT.render('lonoi', True, WHITE)
+        resultRect = resultSurf.get_rect()
+        resultRect.topleft = (WINDOWWIDTH - 375, 70)
+        DISPLAYSURF.blit(resultSurf, resultRect)  
+      
+        # global  
+    # global ContinualSuccessFlag 
 
 #Main function
 def main():
     pygame.init()
+    
     global DISPLAYSURF
     
     ##Font information
@@ -429,18 +467,35 @@ def main():
     global HiOutput
     global LoOutput
     global initialization
+    global Level
+    global ontime
+    global successflag
+    global successtimer
+    global successjar
+    global Threshold
+    global f
+    
+    
+    #This is the period of time the threshold is surpassed, starting at zero:
+    ontime = 0
+    
+    #This opens the file to be written to:
+    f = open('NFT_Output.csv', 'w') #This should have the custom name plugged in later;
     
     initialization = time.time() + 5 #5 seconds are needed for the data stream to connect properly.
     BASICFONTSIZE = 20
     SCOREFONTSIZE = 40 
     BASICFONT = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
     SCOREFONT = pygame.font.Font('freesansbold.ttf', SCOREFONTSIZE)
+    Level = 0 #this is the starting point of threshold challenge.
 
     
     # Flags for whether to quit or pause; starts paused.
     quittingtime = False 
     pausetime = True
-
+    
+    #This is used in counting success time; the success time counter goes forward only if this is true
+    successflag = False
     
     #Initialize the pygame FPS clock
     FPSCLOCK = pygame.time.Clock()
@@ -450,7 +505,7 @@ def main():
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH,WINDOWHEIGHT)) 
     pygame.display.set_caption('NeuroFeedback')
     
-    
+ 
     #Start with 0 points
     score = 0
     
@@ -473,6 +528,7 @@ def main():
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
+                f.close()
                 quittingtime = True
                 break
                 
@@ -481,12 +537,27 @@ def main():
                 if event.key == pygame.K_SPACE:
                     if pausetime == True:
                          pausetime = False
-                         countdown = time.time() + 3 #This is the number of seconds in a Glider game block
+                         ontime = 0             #This sets the beginning period of time to zero
+                         countdown = time.time() + 300 #This is the number of seconds in a Glider game block; set to 300 when done debugging
+                         FirstSuccessTimer = time.time()
+                         score = 0
 
                          #This is for the baselining stages at the beginning and end
                          if stage == 0 or stage == 5:
-                            countdown = time.time() + 1.80 #Number of seconds for Baseline block
+                            countdown = time.time() + 180 #Number of seconds for Baseline block
                             recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                            
+                         #This increases or decreases the threshold of the ratio, based on performance in the previous blocks
+                         
+                         if stage == 2 or stage == 3 or stage == 4:
+                            if ontime/300 > .6:
+                                Threshold = Threshold + stdev/2
+                                Level = Level + 1
+                            elif ontime/300 < .2:
+                                Threshold = Threshold - stdev/2
+                                Level = Level - 1
+                                
+                                
 
                          stage = stage + 1 # time to go to the next stage
         
@@ -510,25 +581,33 @@ def main():
                 print("The subject's Data Baseline is:")
                 output = sum(consolidatedoutput)/len(consolidatedoutput)
                 print(output)
+                f.write(str(output) + ',')
+                Threshold = output
                 print("With a standard deviation of:")
                 deviance = np.std(consolidatedoutput)
                 print(deviance)
-                
+                f.write(str(deviance) + ',')
                 print("The subject's High Noise Baseline is:")
                 HiOutput = sum(consolidatedhi)/len(consolidatedhi)
                 print(HiOutput)
+                f.write(str(HiOutput) + ',')
                 print("With a standard deviation of:")
                 HiDev = np.std(consolidatedhi)
                 print(HiDev)
-                
+                f.write(str(HiDev) + ',')
                 print("The subject's Low Noise Baseline is:")
                 LoOutput = sum(consolidatedlo)/len(consolidatedlo)
                 print(LoOutput)
+                f.write(str(LoOutput) + ',')
                 print("With a standard deviation of:")
                 LoDev = np.std(consolidatedlo)
                 print(LoDev)
+                f.write(str(LoDev) + ',\n')
                 
             pausetime = True
+            if stage == 2 or stage == 3 or stage == 4 or stage == 5:
+                f.write(str(score) + ',' + str(Threshold) + ',' + str(Level) + ',' + str(ontime + time.time() - successjar) + ',\n')
+            successjar = 0
             b.rect.y = WINDOWHEIGHT/2
             continue
         
@@ -542,6 +621,7 @@ def main():
         #Final exit after last stage  
         if stage == 7:
             pygame.quit()
+            f.close()
             print("Game over, man.  Game over.")
             quittingtime = True
             break
@@ -552,42 +632,56 @@ def main():
         #This draws the bar graphs for high and low band noises
         drawHighFreq()
         drawLoFreq()
-   
-            
+        lastflag = successflag   #this is so we can compare the current success state with the previous
             
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
         if SPTruVal > Threshold and HighNoiseFlag == False and HighNoiseFlag == False:  
             b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
             b.image = pygame.image.load("GliderGood.png").convert_alpha()
+            successflag = True 
         elif HighNoiseFlag == True and LowNoiseFlag == True:
             b.image = pygame.image.load("GliderRedOrange.png").convert_alpha()
             b.rect.y	=  b.rect.y + 1
+            successflag = False 
         elif LowNoiseFlag == True:
             b.image = pygame.image.load("GliderRed.png").convert_alpha()
             b.rect.y	=  b.rect.y + 1
+            successflag = False
         elif HighNoiseFlag == True:
             b.image = pygame.image.load("GliderOrange.png").convert_alpha()
-            b.rect.y	=  b.rect.y + 1            
+            b.rect.y	=  b.rect.y + 1
+            successflag = False
         elif SPTruVal <= Threshold:
             b.image = pygame.image.load("Glider.png").convert_alpha()
             b.rect.y = b.rect.y + 1
-        
-            
-
-
+            successflag = False
         
         #This determines whether a point should be awarded
-        score = checkPointScored(score)#paddle1, ball, score, ballDirX)
- 
-        #Prints the score and the current electrode power on-screen
+        score = checkPointScored(score)#paddle1, ball, score, ballDirX)    
+        
+        
+        
+        #COUNTING TIME ABOVE THRESHOLD
+        if lastflag == False:       #if the previous time point was not above threshold and noiseless
+            if successflag == True: #and the current time point is above threshold and noiseless
+                successjar = time.time()    #Begin collecting time in the successjar
+        if lastflag == True:        #If the last time point is good
+            if successflag == False:#But the current one is bad 
+                ontime = ontime + time.time() - successjar  #then dump the success jar
+
+        #Displays the score 
         displayScore(score)
+        
+        #Displays debug information
         displaySPTruVal(round(SPTruVal,3))
         
         
         #draws the ~*STARS*~
         move_and_draw_stars(DISPLAYSURF)
-        #drawcircle()       #dummied out circle code
+
+        #dummied out circle display code
+        #drawcircle()       
         #drawpowercircle()
         
         #Final draws and screen update
