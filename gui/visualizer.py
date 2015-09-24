@@ -61,7 +61,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         self.meter = meter
         
         sensors = [core.variables.SENSOR_NAMES[i] for i in core.variables.SENSORS]
-        sensors.append("FC5/FC6")
+        sensors.append("F3/F4")
         #print(sensors) #debug
         selector = wx.RadioBox(self, wx.ID_ANY, "Select Channel", wx.DefaultPosition,
                                wx.DefaultSize, sensors, 8)
@@ -193,10 +193,10 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             noverlap = int(self.overlap * float(sr))
             if self.channel == 15: #This is for when the ratio of channels is selected.
             
-                freq, density = sig.welch(self.sensor_data[:, 4], fs=sr, nperseg = nperseg,
+                freq, density = sig.welch(self.sensor_data[:, 3], fs=sr, nperseg = nperseg,
                                           noverlap = noverlap, scaling='density')
       
-                freqb, densityb = sig.welch(self.sensor_data[:, 11], fs=sr, nperseg = nperseg,
+                freqb, densityb = sig.welch(self.sensor_data[:, 12], fs=sr, nperseg = nperseg,
                                           noverlap = noverlap, scaling='density')
                 freq = (freq + freqb)/2
                 density = (density + densityb)/2

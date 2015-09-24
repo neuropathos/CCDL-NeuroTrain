@@ -21,13 +21,17 @@ size = [WINDOWWIDTH,WINDOWHEIGHT]
 
 #DEBUG Defaults  (These generally are fed to Png.py from NeuroTrainer.py; if you run Png.py alone, these values are used.
 
-stdev = 0.5         #DEBUG default for stdev of target Hz baseline data
+deviance = 0.5         #DEBUG default for stdev of target Hz baseline data
 HiDev = 0.5         #DEBUG default for stdev of Hi noise freq baseline data
 LoDev = 0.5         #DEBUG default for stdev of Lo noise freq baseline data
 Threshold = 1.0     #EEG threshold for changing NFT parameter
 HiNoise = 1.0       #High amplitude noise amplitude; Dummy value for the electrode
 LoNoise = 1.0       #Low amplitude noise; Dummy value for the electrode
 SPTruVal = 0        #Signal amplitude; Dummy value for the electrode
+
+#These are the time intervals for the training in seconds.
+BlocInterval = 300    #300
+FixationInterval = 180 #180
 
 #Flags for high and low noise; false until noise thresholds are passed.
 HighNoiseFlag = False
@@ -88,9 +92,9 @@ def Pausepoint(stage, score):
     
     if stage == 0:
         if time.time() < initialization: #if I don't make a 5 scond delay, things go funny
-            resultSurf = SCOREFONT.render('PLEASE WAIT WHILE INITIALIZING', True, WHITE)
+            resultSurf = SCOREFONT.render('PLEASE WAIT WHILE INITIALIZING', True, ORANGE)
         else:
-            resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN BASELINE', True, WHITE)
+            resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN BASELINE', True, TURQUOISE)
     if stage == 1:
         resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN STAGE 1', True, WHITE)
     if stage == 2:
@@ -129,7 +133,7 @@ def Pausepoint(stage, score):
         for i in range(0, latitudes):
             pygame.draw.line(DISPLAYSURF, WHITE, ((WINDOWWIDTH-635),WINDOWHEIGHT-300-int(i*400/latitudes)),((WINDOWWIDTH-1235),WINDOWHEIGHT-300-int(i*400/latitudes)), int(LINETHICKNESS*.2))
             
-            increment = 5
+            increment = 15
             resultSurf = BASICFONT.render(str(i*increment), True, WHITE)
             resultRect = resultSurf.get_rect()
             resultRect.center = (WINDOWWIDTH-1265, (WINDOWHEIGHT-298-int(i*400/latitudes)))
@@ -197,31 +201,34 @@ def Pausepoint(stage, score):
             resultRect.center = (WINDOWWIDTH-705, WINDOWHEIGHT-225)
             DISPLAYSURF.blit(resultSurf, resultRect)
         
-        if stage == 2 or stage == 3 or stage == 4:
+        if stage == 2 or stage == 3 or stage == 4 or stage == 5:
             displayedlevel = Level
             if successflag == True:
                 ontime = ontime + time.time() - successjar
+                print(str(ontime)+' seconds supposed Ontime(endtru).')
                 successflag = False
-            if ontime/300 > .6:
-                displayedlevel = displayedlevel + 1
+            # if ontime/BlocInterval > .6:
+                # displayedlevel = displayedlevel + 1
 
-                resultSurf = SCOREFONT.render('LEVEL UP', True,  TURQUOISE)
-                resultRect = resultSurf.get_rect()
-                resultRect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2-250)
-                DISPLAYSURF.blit(resultSurf, resultRect)
-            elif ontime/300 < .2:
-                displayedlevel = displayedlevel - 1
-                resultSurf = SCOREFONT.render('LEVEL DOWN', True, ORANGE)
-                resultRect = resultSurf.get_rect()
-                resultRect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2-250)
-                DISPLAYSURF.blit(resultSurf, resultRect)
+                # resultSurf = SCOREFONT.render('LEVEL UP', True,  TURQUOISE)
+                # resultRect = resultSurf.get_rect()
+                # resultRect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2-250)
+                # DISPLAYSURF.blit(resultSurf, resultRect)
+            # elif ontime/BlocInterval < .2:
+                # displayedlevel = displayedlevel - 1
+                # resultSurf = SCOREFONT.render('LEVEL DOWN', True, ORANGE)
+                # resultRect = resultSurf.get_rect()
+                # resultRect.center = (WINDOWWIDTH/2, WINDOWHEIGHT/2-250)
+                # DISPLAYSURF.blit(resultSurf, resultRect)
                 #This announces difficulty
     return score
 
     
 #BASELINE MODULE
 def fixation(recordtick):
-
+    global consolidatedoutput
+    global consolidatedhi
+    global consolidatedlo
 
     #Clear the screen
     DISPLAYSURF.fill(BLACK)
@@ -246,6 +253,8 @@ def fixation(recordtick):
         consolidatedlo.append(LoNoise)
         HiOutput = sum(consolidatedlo)/len(consolidatedlo)
         LoDev = np.std(consolidatedlo)
+        
+
  
  
 #Draws the bar for high frequency noise
@@ -354,7 +363,7 @@ def drawcircle(): #this is the outline of the threshold.
 
 #This code makes the circle which reflects actual EEG power
 def drawpowercircle(): #this reflects actual NFT correlates; The fourth index in circle is the radius.  
-    multiplier = (SPTruVal-Threshold)/stdev         #This means, look at the current number of standard deviations from baseline
+    multiplier = (SPTruVal-Threshold)/deviation         #This means, look at the current number of standard deviations from baseline
     if multiplier > 2:  #no more than 2 standard deviations allowed.
         multiplier = 2
     if multiplier < -2:
@@ -375,6 +384,8 @@ def drawSprite(b):
         b.rect.top = LINETHICKNESS + 150
     DISPLAYSURF.blit(b.image, b.rect)
 
+    
+    
 
 #Checks to see if a point has been scored; returns new score
 def checkPointScored(score): # paddle1, ball, score, ballDirX):
@@ -385,7 +396,7 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
 
     #Start by checking for success state
 
-    if SPTruVal > Threshold and HighNoiseFlag == False and HighNoiseFlag == False:
+    if SPTruVal < Threshold and HighNoiseFlag == False and HighNoiseFlag == False:
         if FirstSuccessFlag == False:       #Sees if the first round has begun;this just sets the first timer, really.
             if time.time() > ContinualSuccessTimer: #Make sure previous successes do not allow rapid-fire point generation
                 FirstSuccessFlag = True
@@ -396,13 +407,13 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
                 if time.time() > FirstSuccessTimer:      #Have .25 seconds passed?
                     score = score + 1
                     coin.play()                         #Award a point and give a coin!
-                    ContinualSuccessTimer = time.time() + 3 #Make the timer 3 seconds forward
+                    ContinualSuccessTimer = time.time() + 2 #Make the timer 3 seconds forward
                     ContinualSuccessFlag = True            
             else:                                       #read: If at least one point has been scored    
                 if time.time() > ContinualSuccessTimer:  #read: if 3 seconds have passed since the first point
                     score = score + 1
                     coin.play()                         #Award a point and give a coin!
-                    ContinualSuccessTimer = time.time() + 3 #Make the timer 3 seconds forward
+                    ContinualSuccessTimer = time.time() + 2 #Make the timer 3 seconds forward
                     ContinualSuccessFlag = True   
     else:
         FirstSuccessFlag = False
@@ -440,16 +451,64 @@ def displaySPTruVal(SPTruVal):
         resultRect.topleft = (WINDOWWIDTH - 375, 55)
         DISPLAYSURF.blit(resultSurf, resultRect)
     if HighNoiseFlag == True:
-        resultSurf = BASICFONT.render('hinoi', True, WHITE)
+        resultSurf = BASICFONT.render('hinoi', True, ORANGE)
         resultRect = resultSurf.get_rect()
         resultRect.topleft = (WINDOWWIDTH - 300, 70)
         DISPLAYSURF.blit(resultSurf, resultRect)
     if LowNoiseFlag == True:
-        resultSurf = BASICFONT.render('lonoi', True, WHITE)
+        resultSurf = BASICFONT.render('lonoi', True, RED)
         resultRect = resultSurf.get_rect()
         resultRect.topleft = (WINDOWWIDTH - 375, 70)
         DISPLAYSURF.blit(resultSurf, resultRect)  
-      
+    resultSurf = BASICFONT.render('LNoi = %s' %(round(LoNoise,1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 85)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    resultSurf = BASICFONT.render('LNoTh = %s' %(round(LoOutput,1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 100)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    resultSurf = BASICFONT.render('Lnxt = %s' %(len(consolidatedloNext)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 115)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    
+    resultSurf = BASICFONT.render('HNoi = %s' %(round(HiNoise,1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 145)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    resultSurf = BASICFONT.render('HNoTh = %s' %(round(HiOutput,1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 160)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    resultSurf = BASICFONT.render('Hnxt = %s' %(len(consolidatedhiNext)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 175)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    
+    resultSurf = BASICFONT.render('stage = %s' %(stage), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 190)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    
+    
+    resultSurf = BASICFONT.render('Sign = %s' %(round(SPTruVal,1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 220)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    resultSurf = BASICFONT.render('Thr = %s' %(round(Threshold,1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 235)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    resultSurf = BASICFONT.render('Snxt = %s' %(len(consolidatedoutputNext)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 250)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    
+    resultSurf = BASICFONT.render('oTim = %s' %(round(ontime, 1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 280)
+    DISPLAYSURF.blit(resultSurf, resultRect)
         # global  
     # global ContinualSuccessFlag 
 
@@ -462,8 +521,11 @@ def main():
     ##Font information
     global BASICFONT, BASICFONTSIZE
     global SCOREFONTSIZE, SCOREFONT
+    
     global stage
-    global consolidatedoutput
+    global consolidatedoutput 
+    global consolidatedhi 
+    global consolidatedlo 
     global HiOutput
     global LoOutput
     global initialization
@@ -474,8 +536,12 @@ def main():
     global successjar
     global Threshold
     global f
-    
-    
+ 
+    #dubious
+    global consolidatedloNext
+    global consolidatedhiNext
+    global consolidatedoutputNext
+
     #This is the period of time the threshold is surpassed, starting at zero:
     ontime = 0
     
@@ -536,30 +602,41 @@ def main():
             if event.type == pygame.KEYDOWN:  #press space to terminate pauses between blocs
                 if event.key == pygame.K_SPACE:
                     if pausetime == True:
-                         pausetime = False
-                         ontime = 0             #This sets the beginning period of time to zero
-                         countdown = time.time() + 300 #This is the number of seconds in a Glider game block; set to 300 when done debugging
-                         FirstSuccessTimer = time.time()
-                         score = 0
+                        pausetime = False
+                        
+                        if stage == 2 or stage == 3 or stage == 4: #This is for if there is no stored time to add in the success time jar.
+                            if successflag == False:
+                                print(str(ontime)+' seconds is supposed ontime. (falseflag)')
+                        
+                        ontime = 0             #This sets the beginning period of time to zero
+                        countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
+                        FirstSuccessTimer = time.time()
+                        score = 0
+                        recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                        consolidatedoutput = []
+                        consolidatedhi = []
+                        consolidatedlo = []
+                        consolidatedoutputNext = []
+                        consolidatedhiNext = []
+                        consolidatedloNext = []
+                        
+                        #This is for the baselining stages at the beginning and end
+                        if stage == 0 or stage == 5:
+                            countdown = time.time() + FixationInterval #Number of seconds for Baseline block
+                           
+                        # #This increases or decreases the threshold of the ratio, based on performance in the previous blocks
+                        #These are blocked out for now, as the thresholds should shift in other ways.
+                        # if stage == 2 or stage == 3 or stage == 4:
+                           # if ontime/BlocInterval > .6:
+                               # Threshold = Threshold + deviance/2
+                               # Level = Level + 1
+                           # elif ontime/BlocInterval < .2:
+                               # Threshold = Threshold - deviance/2
+                               # Level = Level - 1
+                               
+                               
 
-                         #This is for the baselining stages at the beginning and end
-                         if stage == 0 or stage == 5:
-                            countdown = time.time() + 180 #Number of seconds for Baseline block
-                            recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
-                            
-                         #This increases or decreases the threshold of the ratio, based on performance in the previous blocks
-                         
-                         if stage == 2 or stage == 3 or stage == 4:
-                            if ontime/300 > .6:
-                                Threshold = Threshold + stdev/2
-                                Level = Level + 1
-                            elif ontime/300 < .2:
-                                Threshold = Threshold - stdev/2
-                                Level = Level - 1
-                                
-                                
-
-                         stage = stage + 1 # time to go to the next stage
+                        stage = stage + 1 # time to go to the next stage
         
        
         #needed to exit the program gracefully
@@ -575,40 +652,64 @@ def main():
             FPSCLOCK.tick(FPS)
             continue
         
+        
+        
+        
+        #Hardcoded to 300 for now, but it used to be 30 seconds.  Baseline determination.
+        if time.time()+300 > countdown:
+            if stage == 2 or stage == 3 or stage == 4 or stage == 5: 
+                if time.time() >= recordtick: 
+                    recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
+                    consolidatedoutputNext.append(SPTruVal)
+                    consolidatedhiNext.append(HiNoise)
+                    consolidatedloNext.append(LoNoise)
+
+        
         #If the countdown timer reaches zero
         if time.time() > countdown:  
-            if stage == 1 or stage == 6:
-                print("The subject's Data Baseline is:")
-                output = sum(consolidatedoutput)/len(consolidatedoutput)
-                print(output)
-                f.write(str(output) + ',')
-                Threshold = output
-                print("With a standard deviation of:")
-                deviance = np.std(consolidatedoutput)
-                print(deviance)
-                f.write(str(deviance) + ',')
-                print("The subject's High Noise Baseline is:")
-                HiOutput = sum(consolidatedhi)/len(consolidatedhi)
-                print(HiOutput)
-                f.write(str(HiOutput) + ',')
-                print("With a standard deviation of:")
-                HiDev = np.std(consolidatedhi)
-                print(HiDev)
-                f.write(str(HiDev) + ',')
-                print("The subject's Low Noise Baseline is:")
-                LoOutput = sum(consolidatedlo)/len(consolidatedlo)
-                print(LoOutput)
-                f.write(str(LoOutput) + ',')
-                print("With a standard deviation of:")
-                LoDev = np.std(consolidatedlo)
-                print(LoDev)
-                f.write(str(LoDev) + ',\n')
-                
+        
+            if stage == 2 or stage == 3 or stage == 4 or stage == 5:
+
+                    consolidatedoutput = consolidatedoutputNext
+                    consolidatedhi = consolidatedhiNext
+                    consolidatedlo = consolidatedloNext
+                    
+            print("STAGE " + str(stage)) #Just printing the stage
+            
+            output = sum(consolidatedoutput)/len(consolidatedoutput)
+            f.write(str(output) + ',')
+            Threshold = output
+            print("Data Baseline is: " + str(output))
+            
+            
+            deviance = np.std(consolidatedoutput)
+            f.write(str(deviance) + ',')
+            print("Data baseline STDEV:" + str(deviance))
+
+            HiOutput = sum(consolidatedhi)/len(consolidatedhi)
+            f.write(str(HiOutput) + ',')
+            print("High Freq. Noise Baseline: " + str(HiOutput))
+
+            
+            HiDev = np.std(consolidatedhi)
+            f.write(str(HiDev) + ',')
+            print("High Freq. Noise STDEV: " + str(HiDev))
+ 
+            LoOutput = sum(consolidatedlo)/len(consolidatedlo)
+            f.write(str(LoOutput) + ',')
+            print("Low Freq. Noise Baseline is: " + str(LoOutput))
+
+            LoDev = np.std(consolidatedlo)
+            f.write(str(LoDev) + ',\n')
+            print("Low Freq. Noise STDev is: " + str(LoDev))
             pausetime = True
             if stage == 2 or stage == 3 or stage == 4 or stage == 5:
                 f.write(str(score) + ',' + str(Threshold) + ',' + str(Level) + ',' + str(ontime + time.time() - successjar) + ',\n')
+            f.write('\n') #New line
             successjar = 0
             b.rect.y = WINDOWHEIGHT/2
+            
+
             continue
         
         #baselining at stages 1 and 6
@@ -636,12 +737,12 @@ def main():
             
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
-        if SPTruVal > Threshold and HighNoiseFlag == False and HighNoiseFlag == False:  
+        if SPTruVal < Threshold and HighNoiseFlag == False and HighNoiseFlag == False:  
             b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
             b.image = pygame.image.load("GliderGood.png").convert_alpha()
             successflag = True 
         elif HighNoiseFlag == True and LowNoiseFlag == True:
-            b.image = pygame.image.load("GliderRedOrange.png").convert_alpha()
+            b.image = pygame.image.load("GliderRed.png").convert_alpha()
             b.rect.y	=  b.rect.y + 1
             successflag = False 
         elif LowNoiseFlag == True:
@@ -649,10 +750,10 @@ def main():
             b.rect.y	=  b.rect.y + 1
             successflag = False
         elif HighNoiseFlag == True:
-            b.image = pygame.image.load("GliderOrange.png").convert_alpha()
+            b.image = pygame.image.load("GliderRed.png").convert_alpha()
             b.rect.y	=  b.rect.y + 1
             successflag = False
-        elif SPTruVal <= Threshold:
+        elif SPTruVal >= Threshold:
             b.image = pygame.image.load("Glider.png").convert_alpha()
             b.rect.y = b.rect.y + 1
             successflag = False
