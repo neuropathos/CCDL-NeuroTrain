@@ -30,8 +30,8 @@ LoNoise = 1.0       #Low amplitude noise; Dummy value for the electrode
 SPTruVal = 0        #Signal amplitude; Dummy value for the electrode
 
 #These are the time intervals for the training in seconds.
-BlocInterval = 300    #300
-FixationInterval = 180 #180
+BlocInterval = 12#300    #300
+FixationInterval = 7#180 #180
 
 #Flags for high and low noise; false until noise thresholds are passed.
 HighNoiseFlag = False
@@ -51,7 +51,7 @@ pygame.mixer.init()
 coin = pygame.mixer.Sound('mariocoin.wav')
 
 #Stars Parameters
-MAX_STARS  = 100
+MAX_STARS  = 200
 STAR_SPEED = 1
 stage = 0;
 
@@ -175,7 +175,7 @@ def Pausepoint(stage, score):
             DISPLAYSURF.blit(resultSurf, resultRect)
         if stage >= 3:
             pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH - 1010, WINDOWHEIGHT-300-50/increment*score2], 8)
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-1160),WINDOWHEIGHT-300-50/increment*score1),((WINDOWWIDTH-1010),WINDOWHEIGHT-300-50/increment*score2), int(LINETHICKNESS*.4)) #ie line height to previous circle
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-1160),WINDOWHEIGHT-300-50/increment*score1),((WINDOWWIDTH-1010),WINDOWHEIGHT-300-50/increment*score2), int(LINETHICKNESS*0.3)) #ie line height to previous circle
             
             resultSurf = BASICFONT.render('%s Points' %(score2), True, YELLOW)
             resultRect = resultSurf.get_rect()
@@ -185,7 +185,7 @@ def Pausepoint(stage, score):
             
         if stage >= 4:
             pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH - 860, WINDOWHEIGHT-300-50/increment*score3], 8)
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-1010),WINDOWHEIGHT-300-50/increment*score2),((WINDOWWIDTH-860),WINDOWHEIGHT-300-50/increment*score3), int(LINETHICKNESS*.4))
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-1010),WINDOWHEIGHT-300-50/increment*score2),((WINDOWWIDTH-860),WINDOWHEIGHT-300-50/increment*score3), int(LINETHICKNESS*0.3))
 
             resultSurf = BASICFONT.render('%s Points' %(score3), True, YELLOW)
             resultRect = resultSurf.get_rect()
@@ -193,7 +193,7 @@ def Pausepoint(stage, score):
             DISPLAYSURF.blit(resultSurf, resultRect)
 
         if stage >= 5:
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-860),WINDOWHEIGHT-300-50/increment*score3),((WINDOWWIDTH-710),WINDOWHEIGHT-300-50/increment*score4), int(LINETHICKNESS*.4))
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-860),WINDOWHEIGHT-300-50/increment*score3),((WINDOWWIDTH-710),WINDOWHEIGHT-300-50/increment*score4), int(LINETHICKNESS*0.3))
             pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH - 710, WINDOWHEIGHT-300-50/increment*score4], 8)
             
             resultSurf = BASICFONT.render('%s Points' %(score4), True, YELLOW)
@@ -205,7 +205,7 @@ def Pausepoint(stage, score):
             displayedlevel = Level
             if successflag == True:
                 ontime = ontime + time.time() - successjar
-                print(str(ontime)+' seconds supposed Ontime(endtru).')
+                print(str(ontime-time.time())+' seconds supposed Ontime(endtru).') #ISSUE: probably need to make ontime internally consistent
                 successflag = False
             # if ontime/BlocInterval > .6:
                 # displayedlevel = displayedlevel + 1
@@ -260,16 +260,16 @@ def fixation(recordtick):
 #Draws the bar for high frequency noise
 def drawHighFreq():
     global HighNoiseFlag
-    #We create a scale where the ceiling is +2 stdev, and the floor is -2 stdev
-    highmark = HiOutput + HiDev*2
-    lowmark = HiOutput - HiDev*2
+    #We create a scale where the ceiling is +2 stdev, and the floor is -2 stdev; MODIFIED TO BE EASIER
+    highmark = HiOutput + HiDev*3
+    lowmark = HiOutput - HiDev*1
     
     #We scale the current frame's Hi Freq noise value by subtracting the lowmark baseline
     scaledHi = HiNoise - lowmark
     
     #We must not exceed the ceiling or the floor; and if we don't, we scale the value as a value between 1 and 0.
-    if scaledHi < 0:
-        scaledHi = 0
+    if scaledHi < .1:
+        scaledHi = .1
     elif scaledHi > highmark - lowmark:
         scaledHi = 1
     else:
@@ -292,15 +292,15 @@ def drawHighFreq():
 def drawLoFreq():
     global LowNoiseFlag
     #We create a scale where the ceiling is +2 stdev, and the floor is -2 stdev
-    highmark = LoOutput + LoDev*2
-    lowmark = LoOutput - LoDev*2
+    highmark = LoOutput + LoDev*3
+    lowmark = LoOutput - LoDev*1
     
     #We scale the current frame's Low Freq noise value by subtracting the lowmark as a baseline
     scaledLo = LoNoise - lowmark
     
     #We must not exceed the ceiling or the floor; and if we don't, we scale the value between 1 and 0.
-    if scaledLo < 0:
-        scaledLo = 0
+    if scaledLo < .1:
+        scaledLo = .1
     elif scaledLo > highmark - lowmark:
         scaledLo = 1
     else:
@@ -501,7 +501,7 @@ def displaySPTruVal(SPTruVal):
     resultRect.topleft = (WINDOWWIDTH - 165, 235)
     DISPLAYSURF.blit(resultSurf, resultRect)
     resultSurf = BASICFONT.render('Snxt = %s' %(len(consolidatedoutputNext)), True, WHITE)
-    resultRect = resultSurf.get_rect()
+    resultRect = resultSurf.get_rect() 
     resultRect.topleft = (WINDOWWIDTH - 165, 250)
     DISPLAYSURF.blit(resultSurf, resultRect)
     
@@ -509,7 +509,14 @@ def displaySPTruVal(SPTruVal):
     resultRect = resultSurf.get_rect()
     resultRect.topleft = (WINDOWWIDTH - 165, 280)
     DISPLAYSURF.blit(resultSurf, resultRect)
-        # global  
+    
+    resultSurf = BASICFONT.render('sJar = %s' %(round(time.time() - successjar, 1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 295)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    
+
+    # global  
     # global ContinualSuccessFlag 
 
 #Main function
@@ -612,7 +619,7 @@ def main():
                         countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
                         FirstSuccessTimer = time.time()
                         score = 0
-                        recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                        recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
                         consolidatedoutput = []
                         consolidatedhi = []
                         consolidatedlo = []
@@ -659,7 +666,7 @@ def main():
         if time.time()+300 > countdown:
             if stage == 2 or stage == 3 or stage == 4 or stage == 5: 
                 if time.time() >= recordtick: 
-                    recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
+                    recordtick = time.time()+.10  #This collects data every 250 ms.  Lower this number for higher resolution
                     consolidatedoutputNext.append(SPTruVal)
                     consolidatedhiNext.append(HiNoise)
                     consolidatedloNext.append(LoNoise)
@@ -737,7 +744,7 @@ def main():
             
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
-        if SPTruVal < Threshold and HighNoiseFlag == False and HighNoiseFlag == False:  
+        if SPTruVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False:  
             b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
             b.image = pygame.image.load("GliderGood.png").convert_alpha()
             successflag = True 
