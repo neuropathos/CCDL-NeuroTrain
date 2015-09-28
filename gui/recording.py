@@ -18,6 +18,7 @@ import threading
 import wx
 import traceback
 import numpy as np
+import Png
 
 wildcard = "EEG raw data (*.eeg)|*.eeg|"    \
            "Text File (*.txt)|*.txt|"       \
@@ -54,7 +55,7 @@ class TimedSessionRecorder(ManagerPanel):
         self.file_open = False
         self._filename = None
         self.file = None
-        self.session_duration = 300
+        self.session_duration = 180
         self._time_left = self.session_duration
         self.samples_collected = 0
         self.recording = False
@@ -227,6 +228,7 @@ class TimedSessionRecorder(ManagerPanel):
             thread = threading.Thread(group=None, target=self.timer)
             self.recording = True
             thread.start()
+            Png.RecordBypass = True
         
             # Updates the interface to reflect current changes in the model
             self.update_interface()

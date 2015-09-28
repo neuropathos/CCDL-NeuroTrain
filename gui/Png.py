@@ -6,6 +6,8 @@ from random import randrange #for starfield, random number generator
 
 
 
+
+
 # Number of frames per second
 # Change this value to speed up or slow down your game
 FPS = 50
@@ -529,6 +531,7 @@ def main():
     global BASICFONT, BASICFONTSIZE
     global SCOREFONTSIZE, SCOREFONT
     
+    global RecordBypass
     global stage
     global consolidatedoutput 
     global consolidatedhi 
@@ -548,6 +551,9 @@ def main():
     global consolidatedloNext
     global consolidatedhiNext
     global consolidatedoutputNext
+    
+    #Hopefully this will be read from the recording function at the baseline stages.
+    RecordBypass = False
 
     #This is the period of time the threshold is surpassed, starting at zero:
     ontime = 0
@@ -610,8 +616,8 @@ def main():
                 if event.key == pygame.K_SPACE:
                     if pausetime == True:
                         pausetime = False
-                        
-                        if stage == 2 or stage == 3 or stage == 4: #This is for if there is no stored time to add in the success time jar.
+
+                        if stage == 1 or stage == 2 or stage == 3 or stage == 4: #This is for if there is no stored time to add in the success time jar.
                             if successflag == False:
                                 print(str(ontime)+' seconds is supposed ontime. (falseflag)')
                         
@@ -640,14 +646,38 @@ def main():
                            # elif ontime/BlocInterval < .2:
                                # Threshold = Threshold - deviance/2
                                # Level = Level - 1
-                               
-                               
-
                         stage = stage + 1 # time to go to the next stage
         
-       
+        #This portion accounts for the possibility of recording bypass.
+        if (stage == 0 or stage == 4) and RecordBypass == True:
+            if pausetime == True: #Inelegant; make a module for this later so as to encompass keypresses
+                pausetime = False
+
+                if stage == 1 or stage == 2 or stage == 3 or stage == 4: #This is for if there is no stored time to add in the success time jar.
+                    if successflag == False:
+                        print(str(ontime)+' seconds is supposed ontime. (falseflag)')
+                
+                ontime = 0             #This sets the beginning period of time to zero
+                countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
+                FirstSuccessTimer = time.time()
+                score = 0
+                recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                consolidatedoutput = []
+                consolidatedhi = []
+                consolidatedlo = []
+                consolidatedoutputNext = []
+                consolidatedhiNext = []
+                consolidatedloNext = []
+                
+                                #This is for the baselining stages at the beginning and end
+                if stage == 0 or stage == 5:
+                    countdown = time.time() + FixationInterval #Number of seconds for Baseline block
+
+                stage = stage + 1 # time to go to the next stage
+                
+                
         #needed to exit the program gracefully
-        if quittingtime == True:    
+        if quittingtime == True:      
                 break
                 
         
