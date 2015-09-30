@@ -89,7 +89,7 @@ class TimedSessionRecorder(ManagerPanel):
         self._timeleft_lbl.SetFont( wx.Font(40, family=wx.FONTFAMILY_DEFAULT,
                                             style=wx.FONTSTYLE_NORMAL, weight=wx.BOLD))
         self._timer_spn.SetRange(1, 100)
-        self._timer_spn.SetValue(5)
+        self._timer_spn.SetValue(3)
         
         self.Bind(wx.EVT_SPINCTRL, self.on_spin, self._timer_spn)
         self.Bind(wx.EVT_BUTTON, self.on_start_button, self._start_btn)

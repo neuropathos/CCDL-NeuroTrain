@@ -61,7 +61,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         self.meter = meter
         
         sensors = [core.variables.SENSOR_NAMES[i] for i in core.variables.SENSORS]
-        sensors.append("F3/F4")
+        sensors.append("F3+F4")
         #print(sensors) #debug
         selector = wx.RadioBox(self, wx.ID_ANY, "Select Channel", wx.DefaultPosition,
                                wx.DefaultSize, sensors, 8)
@@ -213,6 +213,8 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             Png.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21])) #4-8 and 12-22
             Png.HiNoise = SPVals[0] #1 Hz
             Png.LoNoise = np.average(SPVals[38:58]) #40-59 Hz
+            print(np.amax(self.sensor_data[:,15]))
+            print(np.amin(self.sensor_data[:,15]))
             #print(Png.HiNoise, Png.LoNoise, Png.SPTruVal)
             #print(SPTruVal)
             #print(SPTruFreq)
