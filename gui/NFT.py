@@ -32,8 +32,8 @@ LoNoise = 1.0       #Low amplitude noise; Dummy value for the electrode
 SPTruVal = 0        #Signal amplitude; Dummy value for the electrode
 
 #These are the time intervals for the training in seconds.
-BlocInterval = 12#300    #300
-FixationInterval = 7#180 #180
+BlocInterval = 20#300    #300
+FixationInterval = 4#180 #180
 
 #Flags for high and low noise; false until noise thresholds are passed.
 HighNoiseFlag = False
@@ -334,17 +334,34 @@ def init_stars(DISPLAYSURF):
 
     
 #This moves the stars incrementally in each game frame;
-def move_and_draw_stars(DISPLAYSURF):
+def move_and_draw_stars(DISPLAYSURF, b):
   """ Move and draw the stars in the given screen """
   global stars
   for star in stars:
     star[0] -= STAR_SPEED
-    # If the star hit the bottom border then we reposition
-    # it in the top of the screen with a random X coordinate.
+    if b.rect.bottom > WINDOWHEIGHT - LINETHICKNESS - 150:
+        star[1] -= STAR_SPEED
+    if b.rect.top < LINETHICKNESS + 150:
+        star[1] += STAR_SPEED
+    DISPLAYSURF.set_at(star,(255,255,255)) #Turns on the next star position
+    # If the star hit the border then we reposition
+    # it in the right side of the screen with a random Y coordinate.
     if star[0] <= 1:
       star[0] = WINDOWWIDTH-500
       star[1] = randrange(0,WINDOWHEIGHT)
-    DISPLAYSURF.set_at(star,(255,255,255)) #Turns on the next star position
+      
+    #In the case of descent  
+    if star[1] <= 1:
+      star[1] = WINDOWHEIGHT
+      star[0] = randrange(0,WINDOWWIDTH-500)
+    #In the case of ascent
+    elif star[1] >= WINDOWHEIGHT:
+      star[1] = 1
+      star[0] = randrange(0,WINDOWWIDTH-500)
+    
+    #Vertical shift for ascent/descent
+     #Descent
+
 
 
 #Draws the arena the game will be played in. 
@@ -381,7 +398,7 @@ def drawSprite(b):
     #Stops it from going too low
     if b.rect.bottom > WINDOWHEIGHT - LINETHICKNESS - 150:
         b.rect.bottom = WINDOWHEIGHT - LINETHICKNESS -150
-    #Stops paddle moving too high 
+    #Stops sprite moving too high 
     elif b.rect.top < LINETHICKNESS + 150:
         b.rect.top = LINETHICKNESS + 150
     DISPLAYSURF.blit(b.image, b.rect)
@@ -661,7 +678,7 @@ def main():
                 countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
                 FirstSuccessTimer = time.time()
                 score = 0
-                recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
                 consolidatedoutput = []
                 consolidatedhi = []
                 consolidatedlo = []
@@ -816,7 +833,7 @@ def main():
         
         
         #draws the ~*STARS*~
-        move_and_draw_stars(DISPLAYSURF)
+        move_and_draw_stars(DISPLAYSURF, b)
 
         #dummied out circle display code
         #drawcircle()       

@@ -14,7 +14,7 @@ from .gui import *
 from .recording import TimedSessionRecorder
 from .visualizer import SingleChannelVisualizer
 from core.manager import EmotivManager, ManagerWrapper
-import Png
+import NFT
 __all__ = [ "NeuroTrainFrame" ]
 
 TITLE = "Cognition & Cortical Dynamics EEG Application"

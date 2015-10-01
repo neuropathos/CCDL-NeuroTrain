@@ -10,10 +10,10 @@ import core.variables
 import gui
 import threading
 import time
-import Png
+import NFT
 import fixation #probably not needed anymore;
 
-Png.SPTruVal =  0
+NFT.SPTruVal =  0
 SPTruFreq = 0
 
 class SingleChannelVisualizer( gui.ManagerPanel ):
@@ -29,7 +29,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         
         self._visualizing = False    # Whether the peakmeter is being updated
         #self.connected = False      # Whether the headset is connected
-        self.update = 0.5           # Interval at which the PeakMeter is updated
+        self.update = 0.25           # Interval at which the PeakMeter is updated
         
         gui.ManagerPanel.__init__(self, parent, manager,
                                   manager_state=True,
@@ -82,7 +82,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         visThread = threading.Thread(group=None, target=self.update_meter)
         visThread.start()
         self.update_interface() 
-        Png.main()
+        NFT.main()
 		
     def on_Base(self, evt):
         """Starts the visualizing thread"""
@@ -210,11 +210,11 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             # print("TESTING")
             # print SPFreqs[4] #this gives 5
             SPVals = density
-            Png.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21])) #4-8 and 12-22
-            Png.HiNoise = SPVals[0] #1 Hz
-            Png.LoNoise = np.average(SPVals[38:58]) #40-59 Hz
-            print(np.amax(self.sensor_data[:,15]))
-            print(np.amin(self.sensor_data[:,15]))
-            #print(Png.HiNoise, Png.LoNoise, Png.SPTruVal)
+            NFT.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21])) #4-8 and 12-22
+            NFT.HiNoise = SPVals[0] #1 Hz
+            NFT.LoNoise = np.average(SPVals[38:58]) #40-59 Hz
+            # print(np.amax(self.sensor_data[:,15])) #This is GyroX, 16 is GyroY.
+            # print(np.amin(self.sensor_data[:,15]))
+            #print(NFT.HiNoise, NFT.LoNoise, NFT.SPTruVal)
             #print(SPTruVal)
             #print(SPTruFreq)

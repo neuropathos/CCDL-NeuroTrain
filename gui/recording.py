@@ -18,7 +18,7 @@ import threading
 import wx
 import traceback
 import numpy as np
-import Png
+import NFT
 
 wildcard = "EEG raw data (*.eeg)|*.eeg|"    \
            "Text File (*.txt)|*.txt|"       \
@@ -228,7 +228,7 @@ class TimedSessionRecorder(ManagerPanel):
             thread = threading.Thread(group=None, target=self.timer)
             self.recording = True
             thread.start()
-            Png.RecordBypass = True
+            NFT.RecordBypass = True
         
             # Updates the interface to reflect current changes in the model
             self.update_interface()
