@@ -5,7 +5,9 @@ import time
 from random import randrange #for starfield, random number generator
 
 
-
+#For debugging NFT; is updated live by visualizer.py.
+DISCONNECT = False
+LastDISCONNECT = False  #so current and previous states can be compared
 
 
 # Number of frames per second
@@ -562,7 +564,9 @@ def main():
     global successtimer
     global successjar
     global Threshold
-    global f
+    global ContinualSuccessTimer
+    global FirstSuccessTimer
+
  
     #dubious
     global consolidatedloNext
@@ -574,6 +578,9 @@ def main():
 
     #This is the period of time the threshold is surpassed, starting at zero:
     ontime = 0
+    
+    recordtick = 0
+    countdown = 0
     
     #This opens the file to be written to:
     f = open('NFT_Output.csv', 'w') #This should have the custom name plugged in later;
@@ -589,6 +596,8 @@ def main():
     # Flags for whether to quit or pause; starts paused.
     quittingtime = False 
     pausetime = True
+    Disconnect = False
+    LastDISCONNECT = False
     
     #This is used in counting success time; the success time counter goes forward only if this is true
     successflag = False
@@ -619,7 +628,12 @@ def main():
 
     
     #Let the games (loop) begin!
-    while True: 
+    while True:
+        #Checks if the headset is connected
+        #When disconnect first happens:
+
+
+
         #Processes game events like quitting or keypresses
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -664,7 +678,35 @@ def main():
                                # Threshold = Threshold - deviance/2
                                # Level = Level - 1
                         stage = stage + 1 # time to go to the next stage
-        
+        if DISCONNECT == True:
+            print('DISCONNECT'+ str(round(time.time(),1)))
+            if LastDISCONNECT == False:
+                PauseStart = time.time()
+                time.sleep(.1)
+                LastDISCONNECT = True
+                pygame.display.flip() #needed to draw the >|<~STARS~>|<
+                pygame.display.update() #Refresh all the details that do not fall under the "flip" method. SP NOTE: I don't understand the difference very well.
+                
+                FPSCLOCK.tick(FPS)                
+                continue
+            else:  #If disconnection remains, just skip everything
+                time.sleep(.100)
+                pygame.display.flip() #needed to draw the >|<~STARS~>|<
+                pygame.display.update() #Refresh all the details that do not fall under the "flip" method. SP NOTE: I don't understand the difference very well.
+                
+                FPSCLOCK.tick(FPS)                
+                continue
+        if DISCONNECT == False:
+            if LastDISCONNECT == True:
+                PauseTotal = time.time() - PauseStart
+                recordtick = recordtick + PauseTotal
+                countdown = countdown + PauseTotal
+                initialization = initialization + PauseTotal
+                ContinualSuccessTimer = ContinualSuccessTimer + PauseTotal
+                FirstSuccessTimer= FirstSuccessTimer + PauseTotal
+                ontime = ontime + PauseTotal
+                successjar = successjar + PauseTotal
+        LastDISCONNECT = DISCONNECT  
         #This portion accounts for the possibility of recording bypass.
         if (stage == 0 or stage == 4) and RecordBypass == True:
             if pausetime == True: #Inelegant; make a module for this later so as to encompass keypresses

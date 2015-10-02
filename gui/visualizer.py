@@ -111,7 +111,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         """Updates the interface"""
         if self.manager.has_user :  # 'or True' for testing purposes
             self.selector.Enable()
- 
+            NFT.DISCONNECT = False #This reassures NFT that the user is connected.
             if self.visualizing:
                 self.start_btn.Disable()
                 self.Base_btn.Disable()
@@ -130,6 +130,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                 self.stop_btn.Disable()
                 self.meter.Disable()
         else:
+            NFT.DISCONNECT = True  #This tells NFT to pause things
             self.selector.Disable()
             self.start_btn.Disable()
             self.stop_btn.Disable()
