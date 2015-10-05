@@ -32,10 +32,11 @@ Threshold = 1.0     #EEG threshold for changing NFT parameter
 HiNoise = 1.0       #High amplitude noise amplitude; Dummy value for the electrode
 LoNoise = 1.0       #Low amplitude noise; Dummy value for the electrode
 SPTruVal = 0        #Signal amplitude; Dummy value for the electrode
+CONTROL = False     #This decides whether the trial is real or not.
 
 #These are the time intervals for the training in seconds.
-BlocInterval = 20#300    #300
-FixationInterval = 4#180 #180
+BlocInterval = 300    #300
+FixationInterval = 1.80 #180
 
 #Flags for high and low noise; false until noise thresholds are passed.
 HighNoiseFlag = False
@@ -566,7 +567,8 @@ def main():
     global Threshold
     global ContinualSuccessTimer
     global FirstSuccessTimer
-
+    global CONTROL
+    global SPTruVal
  
     #dubious
     global consolidatedloNext
@@ -663,7 +665,7 @@ def main():
                         consolidatedoutputNext = []
                         consolidatedhiNext = []
                         consolidatedloNext = []
-                        
+                        ControlCountdown = time.time()                        
                         #This is for the baselining stages at the beginning and end
                         if stage == 0 or stage == 5:
                             countdown = time.time() + FixationInterval #Number of seconds for Baseline block
@@ -678,6 +680,16 @@ def main():
                                # Threshold = Threshold - deviance/2
                                # Level = Level - 1
                         stage = stage + 1 # time to go to the next stage
+                        
+                    #If the control key is pressed
+                if event.key == pygame.K_q:  
+                    if stage == 0:
+                        if pausetime == True:
+
+                            print("CONTROL mode initiated.")
+                            CONTROL = True
+                            
+
         if DISCONNECT == True:
             print('DISCONNECT'+ str(round(time.time(),1)))
             if LastDISCONNECT == False:
@@ -825,15 +837,27 @@ def main():
             
         #Let's make the stage 
         drawArena()
-            
+
+        #This is for the CONTROL condition:
+        if CONTROL == True:
+            if ControlCountdown <= time.time():
+                a = randrange(1,100)
+                a = a - stage*5
+                if a < 30: ControlVal = Threshold - 1
+                else: ControlVal = Threshold + 1
+                ControlCountdown = time.time() + (randrange(4, 20)*0.1)
+        else: ControlVal = SPTruVal
+        
         #This draws the bar graphs for high and low band noises
         drawHighFreq()
         drawLoFreq()
         lastflag = successflag   #this is so we can compare the current success state with the previous
-            
+        
+
+         
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
-        if SPTruVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False:  
+        if (SPTruVal < Threshold or ControlVal < Threshold) and HighNoiseFlag == False and LowNoiseFlag == False:  
             b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
             b.image = pygame.image.load("GliderGood.png").convert_alpha()
             successflag = True 
@@ -849,12 +873,13 @@ def main():
             b.image = pygame.image.load("GliderRed.png").convert_alpha()
             b.rect.y	=  b.rect.y + 1
             successflag = False
-        elif SPTruVal >= Threshold:
+        elif SPTruVal >= Threshold or ControlVal >= Threshold:
             b.image = pygame.image.load("Glider.png").convert_alpha()
             b.rect.y = b.rect.y + 1
             successflag = False
         
         #This determines whether a point should be awarded
+        SPTruVal = ControlVal #This only does anything in CONTROL mode
         score = checkPointScored(score)#paddle1, ball, score, ballDirX)    
         
         
