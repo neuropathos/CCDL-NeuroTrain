@@ -3,7 +3,7 @@ from pygame.locals import *
 import numpy as np
 import time
 from random import randrange #for starfield, random number generator
-
+print("Initializing the Neurofeedback Paradigm...")
 
 #For debugging NFT; is updated live by visualizer.py.
 DISCONNECT = False
@@ -35,7 +35,7 @@ SPTruVal = 0        #Signal amplitude; Dummy value for the electrode
 CONTROL = False     #This decides whether the trial is real or not.
 
 #These are the time intervals for the training in seconds.
-BlocInterval = 300    #300
+BlocInterval = 3.00    #300
 FixationInterval = 1.80 #180
 
 #Flags for high and low noise; false until noise thresholds are passed.
@@ -48,7 +48,7 @@ FirstSuccessFlag = False
 ContinualSuccessFlag = False
 ContinualSuccessTimer = time.time()
 
-#The number of pixels the line functions used in this game is, by default
+#The number of pixels in pygame line functions, by default
 LINETHICKNESS = 10  
 
 #Initialize the sound engine then load a sound
@@ -90,6 +90,7 @@ def Pausepoint(stage, score):
     global successflag
     global successjar
     global Level
+    global remainder
 
     #Black out everything on the screen
     DISPLAYSURF.fill(BLACK)
@@ -99,7 +100,8 @@ def Pausepoint(stage, score):
         if time.time() < initialization: #if I don't make a 5 scond delay, things go funny
             resultSurf = SCOREFONT.render('PLEASE WAIT WHILE INITIALIZING', True, ORANGE)
         else:
-            resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN BASELINE', True, TURQUOISE)
+            if CONTROL == True: resultSurf = SCOREFONT.render('START RECORDING TO BEGIN BASELINE', True, RED)
+            else: resultSurf = SCOREFONT.render('START RECORDING TO BEGIN BASELINE', True, TURQUOISE)
     if stage == 1:
         resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN STAGE 1', True, WHITE)
     if stage == 2:
@@ -130,7 +132,7 @@ def Pausepoint(stage, score):
     if stage != 0:
         #Draw the grid 
         pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-635,WINDOWHEIGHT-300),(-600,-400)), LINETHICKNESS)
-        
+        #screen width interval is 100; 
         
         
         #latitude lines
@@ -208,10 +210,7 @@ def Pausepoint(stage, score):
         
         if stage == 2 or stage == 3 or stage == 4 or stage == 5:
             displayedlevel = Level
-            if successflag == True:
-                ontime = ontime + time.time() - successjar
-                print(str(ontime-time.time())+' seconds supposed Ontime(endtru).') #ISSUE: probably need to make ontime internally consistent
-                successflag = False
+			
             # if ontime/BlocInterval > .6:
                 # displayedlevel = displayedlevel + 1
 
@@ -244,7 +243,7 @@ def fixation(recordtick):
     
     #Fill up the baselining array until time runs out
     if time.time() >= recordtick: 
-        recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
+        recordtick = time.time()+.10  #This collects data every 250 ms.  Lower this number for higher resolution
         consolidatedoutput.append(SPTruVal)
         output = sum(consolidatedoutput)/len(consolidatedoutput)
         deviance = np.std(consolidatedoutput)
@@ -282,15 +281,15 @@ def drawHighFreq():
         
     #Let's create the scaled high bar; orange if above threshold, white if below.
     if scaledHi >= 0.5:
-        pygame.draw.rect(DISPLAYSURF, ORANGE,((WINDOWWIDTH-325,400),(150,-300*scaledHi)) )
+        pygame.draw.rect(DISPLAYSURF, ORANGE,((WINDOWWIDTH-324,400),(150,-300*scaledHi)) )
         HighNoiseFlag = True
     else:
-        pygame.draw.rect(DISPLAYSURF, WHITE,((WINDOWWIDTH-325,400),(150,-300*scaledHi)) )
+        pygame.draw.rect(DISPLAYSURF, WHITE,((WINDOWWIDTH-324,400),(150,-300*scaledHi)) )
         HighNoiseFlag = False
     
     #This draws the "container" for the bar (in white), and the midmark (in orange). 
-    pygame.draw.line(DISPLAYSURF, ORANGE, ((WINDOWWIDTH-325), 250),((WINDOWWIDTH-175), 250), (LINETHICKNESS/5))    
-    pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-325,100),(150,300)), int(LINETHICKNESS*.5))
+    pygame.draw.line(DISPLAYSURF, ORANGE, ((WINDOWWIDTH-324), 250),((WINDOWWIDTH-175), 250), (LINETHICKNESS/5))    
+    pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-324,100),(150,300)), int(LINETHICKNESS*.5))
 
     
 #Draws the bar for low frequency noise
@@ -314,14 +313,14 @@ def drawLoFreq():
     #Let's create the scaled high bar; red if above threshold, white if below.
     if scaledLo >= 0.5:
         LowNoiseFlag = True
-        pygame.draw.rect(DISPLAYSURF, RED,((WINDOWWIDTH-325,800),(150,-300*scaledLo)) )
+        pygame.draw.rect(DISPLAYSURF, RED,((WINDOWWIDTH-324,800),(150,-300*scaledLo)) )
     else:
-        pygame.draw.rect(DISPLAYSURF, WHITE,((WINDOWWIDTH-325,800),(150,-300*scaledLo)) )
+        pygame.draw.rect(DISPLAYSURF, WHITE,((WINDOWWIDTH-324,800),(150,-300*scaledLo)) )
         LowNoiseFlag = False
     
     #This draws the "container" for the bar (in white), and the midmark (in red). 
-    pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-325), 650),((WINDOWWIDTH-175), 650), (LINETHICKNESS/5))    
-    pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-325,500),(150,300)), int(LINETHICKNESS*.5))
+    pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-324), 650),((WINDOWWIDTH-175), 650), (LINETHICKNESS/5))    
+    pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-324,500),(150,300)), int(LINETHICKNESS*.5))
  
  
  # this sets up the starting point for the stars
@@ -448,12 +447,12 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
 def displayScore(score):
     resultSurf = SCOREFONT.render('Score = %s' %(score), True, WHITE)
     resultRect = resultSurf.get_rect()
-    resultRect.topleft = (650, 40)
+    resultRect.center = (WINDOWWIDTH/2-243, 40)
     DISPLAYSURF.blit(resultSurf, resultRect)
 
 	
 #Displays debugging stuff; the calling of SPTruVal here is kind of an artifact, ignore it I think
-def displaySPTruVal(SPTruVal):
+def displayDEBUG(SPTruVal):
     resultSurf = BASICFONT.render('FirstTimer = %s' %(round(FirstSuccessTimer-time.time(),3)), True, WHITE)
     resultRect = resultSurf.get_rect()
     resultRect.topleft = (WINDOWWIDTH - 300, 25)
@@ -537,6 +536,11 @@ def displaySPTruVal(SPTruVal):
     resultRect.topleft = (WINDOWWIDTH - 165, 295)
     DISPLAYSURF.blit(resultSurf, resultRect)
     
+    resultSurf = BASICFONT.render('Time = %s' %(round(time.time() - countdown, 1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 310)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    
 
     # global  
     # global ContinualSuccessFlag 
@@ -569,7 +573,9 @@ def main():
     global FirstSuccessTimer
     global CONTROL
     global SPTruVal
- 
+    global remainder
+    global countdown
+    
     #dubious
     global consolidatedloNext
     global consolidatedhiNext
@@ -622,7 +628,7 @@ def main():
     b = pygame.sprite.Sprite()          # define parameters of glider sprite
     b.image = pygame.image.load("Glider.png").convert_alpha() # Load the glider sprite
     b.rect = b.image.get_rect() # use image extent values
-    b.rect.topleft = [WINDOWWIDTH/2-300, WINDOWHEIGHT/2] # put the image in the center of the player window
+    b.rect.center = [WINDOWWIDTH/2-243, WINDOWHEIGHT/2] # put the image in the center of the player window
    
    
     # make mouse cursor invisible
@@ -649,15 +655,13 @@ def main():
                 if event.key == pygame.K_SPACE:
                     if pausetime == True:
                         pausetime = False
-
-                        if stage == 1 or stage == 2 or stage == 3 or stage == 4: #This is for if there is no stored time to add in the success time jar.
-                            if successflag == False:
-                                print(str(ontime)+' seconds is supposed ontime. (falseflag)')
                         
                         ontime = 0             #This sets the beginning period of time to zero
                         countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
                         FirstSuccessTimer = time.time()
                         score = 0
+                        successjar = 0
+                        remainder = 0
                         recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
                         consolidatedoutput = []
                         consolidatedhi = []
@@ -725,6 +729,7 @@ def main():
                 pausetime = False
 
                 if stage == 1 or stage == 2 or stage == 3 or stage == 4: #This is for if there is no stored time to add in the success time jar.
+
                     if successflag == False:
                         print(str(ontime)+' seconds is supposed ontime. (falseflag)')
                 
@@ -732,7 +737,7 @@ def main():
                 countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
                 FirstSuccessTimer = time.time()
                 score = 0
-                recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
                 consolidatedoutput = []
                 consolidatedhi = []
                 consolidatedlo = []
@@ -781,7 +786,9 @@ def main():
                     consolidatedoutput = consolidatedoutputNext
                     consolidatedhi = consolidatedhiNext
                     consolidatedlo = consolidatedloNext
-                    
+					
+            #What follows is a series of print statements that tell the administrator about previous sessions.
+			#These values are also written to a text file for future examination.
             print("STAGE " + str(stage)) #Just printing the stage
             
             output = sum(consolidatedoutput)/len(consolidatedoutput)
@@ -812,11 +819,20 @@ def main():
             print("Low Freq. Noise STDev is: " + str(LoDev))
             pausetime = True
             if stage == 2 or stage == 3 or stage == 4 or stage == 5:
-                f.write(str(score) + ',' + str(Threshold) + ',' + str(Level) + ',' + str(ontime + time.time() - successjar) + ',\n')
+                if successflag == True:
+                    remainder = time.time() - successjar
+                    # print(ontime)
+                    # print(successjar)
+                    # print(str(ontime+time.time()-successjar)+' seconds supposed Ontime(endtru).') #ISSUE: probably need to make ontime internally consistent
+                    successflag = False
+                if successflag == False:
+                    print(str(round(ontime+remainder, 2))+' seconds is supposed ontime.') #falseflag  
+                f.write(str(score) + ',' + str(Threshold) + ',' + str(Level) + ',' + str(round(ontime+remainder, 2)) + ',\n')
+                
             f.write('\n') #New line
-            successjar = 0
             b.rect.y = WINDOWHEIGHT/2
             
+          
 
             continue
         
@@ -859,7 +875,7 @@ def main():
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
         if (SPTruVal < Threshold or ControlVal < Threshold) and HighNoiseFlag == False and LowNoiseFlag == False:  
             b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
-            b.image = pygame.image.load("GliderGood.png").convert_alpha()
+            b.image = pygame.image.load("GliderGood1.png").convert_alpha()
             successflag = True 
         elif HighNoiseFlag == True and LowNoiseFlag == True:
             b.image = pygame.image.load("GliderRed.png").convert_alpha()
@@ -896,7 +912,7 @@ def main():
         displayScore(score)
         
         #Displays debug information
-        displaySPTruVal(round(SPTruVal,3))
+        displayDEBUG(round(SPTruVal,3))
         
         
         #draws the ~*STARS*~
