@@ -58,7 +58,7 @@ coin = pygame.mixer.Sound('mariocoin.wav')
 #Stars Parameters
 MAX_STARS  = 200
 STAR_SPEED = 1
-stage = 0;
+stage = 1;
 
 # Set up the colours (RGB values)
 BLACK     = (0  ,0  ,0  )
@@ -131,65 +131,65 @@ def Pausepoint(stage, score):
     
     if stage != 0:
         #Draw the grid 
-        pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2+300,WINDOWHEIGHT-300),(-600,-400)), LINETHICKNESS)
+        pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2+300,WINDOWHEIGHT/2+200),(-600,-400)), LINETHICKNESS)
         #screen width interval is 100; 
         
         
         #latitude lines
         latitudes = 8 #This is the number of times to split latitudinally
         for i in range(0, latitudes):
-            pygame.draw.line(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2+300),WINDOWHEIGHT-300-int(i*400/latitudes)),((WINDOWWIDTH/2-300),WINDOWHEIGHT-300-int(i*400/latitudes)), int(LINETHICKNESS*.2))
+            pygame.draw.line(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2+300),WINDOWHEIGHT/2+200-int(i*400/latitudes)),((WINDOWWIDTH/2-300),WINDOWHEIGHT/2+200-int(i*400/latitudes)), int(LINETHICKNESS*.2))
             
             increment = 15
             resultSurf = BASICFONT.render(str(i*increment), True, WHITE)
             resultRect = resultSurf.get_rect()
-            resultRect.center = (WINDOWWIDTH/2-330, (WINDOWHEIGHT-298-int(i*400/latitudes)))
+            resultRect.center = (WINDOWWIDTH/2-330, (WINDOWHEIGHT/2+202-int(i*400/latitudes)))
             DISPLAYSURF.blit(resultSurf, resultRect)
         
         #Display the longitude lines and labels
         for i in range(0, 4):        
             resultSurf = BASICFONT.render("Trial " + str(i+1), True, WHITE)
             resultRect = resultSurf.get_rect()
-            resultRect.center = (WINDOWWIDTH/2-220+(i*150), WINDOWHEIGHT-250)
+            resultRect.center = (WINDOWWIDTH/2-220+(i*150), WINDOWHEIGHT/2+250)
             DISPLAYSURF.blit(resultSurf, resultRect)
             if i == 3: continue #We only need 3 lines
-            pygame.draw.line(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2-150+i*150),WINDOWHEIGHT-300),((WINDOWWIDTH/2-150+i*150),WINDOWHEIGHT-700), int(LINETHICKNESS*.2))        
+            pygame.draw.line(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2-150+i*150),WINDOWHEIGHT/2+200),((WINDOWWIDTH/2-150+i*150),WINDOWHEIGHT/2-200), int(LINETHICKNESS*.2))        
 
       
         
         if stage >= 2:
-            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 - 225, WINDOWHEIGHT-300-50/increment*score1], 8) #tie Windowheight to score
+            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 - 225, WINDOWHEIGHT/2+200-50/increment*score1], 8) #tie Windowheight to score
             
             resultSurf = BASICFONT.render('%s Points' %(score1), True, YELLOW)
             resultRect = resultSurf.get_rect()
-            resultRect.center = (WINDOWWIDTH/2-220, WINDOWHEIGHT-225)
+            resultRect.center = (WINDOWWIDTH/2-220, WINDOWHEIGHT/2+275)
             DISPLAYSURF.blit(resultSurf, resultRect)
         if stage >= 3:
-            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 - 75, WINDOWHEIGHT-300-50/increment*score2], 8)
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2-225),WINDOWHEIGHT-300-50/increment*score1),((WINDOWWIDTH/2-75),WINDOWHEIGHT-300-50/increment*score2), int(LINETHICKNESS*0.3)) #ie line height to previous circle
+            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 - 75, WINDOWHEIGHT/2+200-50/increment*score2], 8)
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2-225),WINDOWHEIGHT/2+200-50/increment*score1),((WINDOWWIDTH/2-75),WINDOWHEIGHT/2+200-50/increment*score2), int(LINETHICKNESS*0.3)) #ie line height to previous circle
             
             resultSurf = BASICFONT.render('%s Points' %(score2), True, YELLOW)
             resultRect = resultSurf.get_rect()
-            resultRect.center = (WINDOWWIDTH/2-70, WINDOWHEIGHT-225)
+            resultRect.center = (WINDOWWIDTH/2-70, WINDOWHEIGHT/2+275)
             DISPLAYSURF.blit(resultSurf, resultRect)
 
             
         if stage >= 4:
-            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 + 75, WINDOWHEIGHT-300-50/increment*score3], 8)
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2-75),WINDOWHEIGHT-300-50/increment*score2),((WINDOWWIDTH/2 + 75),WINDOWHEIGHT-300-50/increment*score3), int(LINETHICKNESS*0.3))
+            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 + 75, WINDOWHEIGHT/2+200-50/increment*score3], 8)
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2-75),WINDOWHEIGHT/2+200-50/increment*score2),((WINDOWWIDTH/2 + 75),WINDOWHEIGHT/2+200-50/increment*score3), int(LINETHICKNESS*0.3))
 
             resultSurf = BASICFONT.render('%s Points' %(score3), True, YELLOW)
             resultRect = resultSurf.get_rect()
-            resultRect.center = (WINDOWWIDTH/2 + 80, WINDOWHEIGHT-225)
+            resultRect.center = (WINDOWWIDTH/2 + 80, WINDOWHEIGHT/2+275)
             DISPLAYSURF.blit(resultSurf, resultRect)
 
         if stage >= 5:
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2 + 75),WINDOWHEIGHT-300-50/increment*score3),((WINDOWWIDTH/2 + 225),WINDOWHEIGHT-300-50/increment*score4), int(LINETHICKNESS*0.3))
-            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 + 225, WINDOWHEIGHT-300-50/increment*score4], 8)
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2 + 75),WINDOWHEIGHT/2+200-50/increment*score3),((WINDOWWIDTH/2 + 225),WINDOWHEIGHT/2+200-50/increment*score4), int(LINETHICKNESS*0.3))
+            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 + 225, WINDOWHEIGHT/2+200-50/increment*score4], 8)
             
             resultSurf = BASICFONT.render('%s Points' %(score4), True, YELLOW)
             resultRect = resultSurf.get_rect()
-            resultRect.center = (WINDOWWIDTH/2 + 220, WINDOWHEIGHT-225)
+            resultRect.center = (WINDOWWIDTH/2 + 220, WINDOWHEIGHT/2+275)
             DISPLAYSURF.blit(resultSurf, resultRect)
         
         if stage == 2 or stage == 3 or stage == 4 or stage == 5:
