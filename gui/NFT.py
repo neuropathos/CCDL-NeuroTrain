@@ -14,6 +14,8 @@ LastDISCONNECT = False  #so current and previous states can be compared
 # Change this value to speed up or slow down your game
 FPS = 50
 
+#The default filename for the NFT paradigm:
+OutputFilename = 'NFT_Output.csv'
 
 
 
@@ -249,7 +251,7 @@ def fixation(recordtick):
 def drawHighFreq():
     global HighNoiseFlag
     #We create a scale where the ceiling is +2 stdev, and the floor is -2 stdev; MODIFIED TO BE EASIER
-    highmark = HiOutput + HiDev*3
+    highmark = HiOutput + HiDev*8
     lowmark = HiOutput - HiDev*1
     
     #We scale the current frame's Hi Freq noise value by subtracting the lowmark baseline
@@ -265,22 +267,22 @@ def drawHighFreq():
         
     #Let's create the scaled high bar; orange if above threshold, white if below.
     if scaledHi >= 0.5:
-        pygame.draw.rect(DISPLAYSURF, ORANGE,((WINDOWWIDTH-324,400),(150,-300*scaledHi)) )
+        pygame.draw.rect(DISPLAYSURF, ORANGE,((WINDOWWIDTH-324,WINDOWHEIGHT/2-50),(150,-300*scaledHi)) )
         HighNoiseFlag = True
     else:
-        pygame.draw.rect(DISPLAYSURF, WHITE,((WINDOWWIDTH-324,400),(150,-300*scaledHi)) )
+        pygame.draw.rect(DISPLAYSURF, WHITE,((WINDOWWIDTH-324,WINDOWHEIGHT/2-50),(150,-300*scaledHi)) )
         HighNoiseFlag = False
     
     #This draws the "container" for the bar (in white), and the midmark (in orange). 
-    pygame.draw.line(DISPLAYSURF, ORANGE, ((WINDOWWIDTH-324), 250),((WINDOWWIDTH-175), 250), (LINETHICKNESS/5))    
-    pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-324,100),(150,300)), int(LINETHICKNESS*.5))
+    pygame.draw.line(DISPLAYSURF, ORANGE, ((WINDOWWIDTH-324), WINDOWHEIGHT/2-200),((WINDOWWIDTH-175), WINDOWHEIGHT/2-200), (LINETHICKNESS/5))    
+    pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-324,WINDOWHEIGHT/2-350),(150,300)), int(LINETHICKNESS*.5))
 
 
 #Draws the bar for low frequency noise
 def drawLoFreq():
     global LowNoiseFlag
     #We create a scale where the ceiling is +2 stdev, and the floor is -2 stdev
-    highmark = LoOutput + LoDev*3
+    highmark = LoOutput + LoDev*8
     lowmark = LoOutput - LoDev*1
     
     #We scale the current frame's Low Freq noise value by subtracting the lowmark as a baseline
@@ -297,14 +299,14 @@ def drawLoFreq():
     #Let's create the scaled high bar; red if above threshold, white if below.
     if scaledLo >= 0.5:
         LowNoiseFlag = True
-        pygame.draw.rect(DISPLAYSURF, RED,((WINDOWWIDTH-324,800),(150,-300*scaledLo)) )
+        pygame.draw.rect(DISPLAYSURF, RED,((WINDOWWIDTH-324,WINDOWHEIGHT/2 + 350),(150,-300*scaledLo)) )
     else:
-        pygame.draw.rect(DISPLAYSURF, WHITE,((WINDOWWIDTH-324,800),(150,-300*scaledLo)) )
+        pygame.draw.rect(DISPLAYSURF, WHITE,((WINDOWWIDTH-324,WINDOWHEIGHT/2 + 350),(150,-300*scaledLo)) )
         LowNoiseFlag = False
     
     #This draws the "container" for the bar (in white), and the midmark (in red). 
-    pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-324), 650),((WINDOWWIDTH-175), 650), (LINETHICKNESS/5))    
-    pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-324,500),(150,300)), int(LINETHICKNESS*.5))
+    pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH-324), WINDOWHEIGHT/2+200),((WINDOWWIDTH-175), WINDOWHEIGHT/2+200), (LINETHICKNESS/5))    
+    pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH-324,WINDOWHEIGHT/2 + 50),(150,300)), int(LINETHICKNESS*.5))
  
  
  # this sets up the starting point for the stars
@@ -559,6 +561,7 @@ def main():
     global SPTruVal
     global remainder
     global countdown
+    global OutputFilename
     
     #dubious
     global consolidatedloNext
@@ -575,7 +578,7 @@ def main():
     countdown = 0
     
     #This opens the file to be written to:
-    f = open('NFT_Output.csv', 'w') #This should have the custom name plugged in later;
+    f = open(OutputFilename, 'w') #This should have the custom name plugged in later;
     
     initialization = time.time() + 5 #5 seconds are needed for the data stream to connect properly.
     BASICFONTSIZE = 20
