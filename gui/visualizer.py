@@ -212,8 +212,8 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             # print SPFreqs[4] #this gives 5
             SPVals = density
             NFT.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21])) #4-8 and 12-22
-            NFT.HiNoise = SPVals[0] #1 Hz
-            NFT.LoNoise = np.average(SPVals[38:58]) #40-59 Hz
+            NFT.LoNoise = SPVals[0] #1 Hz
+            NFT.HiNoise = np.average(SPVals[38:58]) #40-59 Hz
             # print(np.amax(self.sensor_data[:,15])) #This is GyroX, 16 is GyroY.
             # print(np.amin(self.sensor_data[:,15]))
             #print(NFT.HiNoise, NFT.LoNoise, NFT.SPTruVal)
