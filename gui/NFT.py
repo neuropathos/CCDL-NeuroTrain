@@ -37,8 +37,8 @@ SPTruVal = 0        #Signal amplitude; Dummy value for the electrode
 CONTROL = False     #This decides whether the trial is real or not.
 
 #These are the time intervals for the training in seconds.
-BlocInterval = 13.00    #300
-FixationInterval = 1.80 #180
+BlocInterval = 300    #300
+FixationInterval = 180 #180
 
 #Flags for high and low noise; false until noise thresholds are passed.
 HighNoiseFlag = False
@@ -679,7 +679,11 @@ def main():
 
                             print("CONTROL mode initiated.")
                             CONTROL = True
-                            
+                 if event.key == pygame.K_p:  
+                    if stage == 0:                           
+                        BlocInterval = 15    #300
+                        FixationInterval = 1 #180
+                        print('Debug values enabled')
 
         if DISCONNECT == True:
             print('DISCONNECT'+ str(round(time.time(),1)))
