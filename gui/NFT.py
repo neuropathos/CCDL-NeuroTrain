@@ -34,11 +34,12 @@ Threshold = 1.0     #EEG threshold for changing NFT parameter
 HiNoise = 1.0       #High amplitude noise amplitude; Dummy value for the electrode
 LoNoise = 1.0       #Low amplitude noise; Dummy value for the electrode
 SPTruVal = 0        #Signal amplitude; Dummy value for the electrode
-CONTROL = False     #This decides whether the trial is real or not.
+successjar = 0
+CONTROL = False     #This decides whether this running of the experiment is real or not.
 
 #These are the time intervals for the training in seconds.
 BlocInterval = 300    #300
-FixationInterval = 180 #180
+FixationInterval = 189 #180 #This is extended by 8 seconds as a bandaid solution to the fact that 
 
 #Flags for high and low noise; false until noise thresholds are passed.
 HighNoiseFlag = False
@@ -60,7 +61,7 @@ coin = pygame.mixer.Sound('mariocoin.wav')
 #Stars Parameters
 MAX_STARS  = 200
 STAR_SPEED = 1
-stage = 1;
+stage = 0;
 
 # Set up the colours (RGB values)
 BLACK     = (0  ,0  ,0  )
@@ -129,7 +130,7 @@ def Pausepoint(stage, score):
 
     
         
-    # I kind of did a hack job here, but basically this sets up the screen display for each stage.
+    # this sets up the screen display for each stage. (could probably be tidied up better)
     
     if stage != 0:
         #Draw the grid 
@@ -243,6 +244,7 @@ def fixation(recordtick):
         consolidatedlo.append(LoNoise)
         HiOutput = sum(consolidatedlo)/len(consolidatedlo)
         LoDev = np.std(consolidatedlo)
+        
         
 
  
@@ -403,10 +405,10 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
 
     #Start by checking for success state
 
-    if SPTruVal < Threshold and HighNoiseFlag == False and HighNoiseFlag == False:
+    if SPTruVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False:
         if FirstSuccessFlag == False:       #Sees if the first round has begun;this just sets the first timer, really.
             if time.time() > ContinualSuccessTimer: #Make sure previous successes do not allow rapid-fire point generation
-                FirstSuccessFlag = True
+                FirstSuccessFlag = True 
                 FirstSuccessTimer = time.time() +.25
                 
         elif FirstSuccessFlag == True:       
@@ -562,6 +564,8 @@ def main():
     global remainder
     global countdown
     global OutputFilename
+    global BlocInterval
+    global FixationInterval
     
     #dubious
     global consolidatedloNext
@@ -642,6 +646,7 @@ def main():
                 if event.key == pygame.K_SPACE:
                     if pausetime == True:
                         pausetime = False
+                        RecordBypass = False #Likely unnecessary, but I'm playing it safe for now.
                         
                         ontime = 0             #This sets the beginning period of time to zero
                         countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
@@ -679,7 +684,7 @@ def main():
 
                             print("CONTROL mode initiated.")
                             CONTROL = True
-                 if event.key == pygame.K_p:  
+                if event.key == pygame.K_p:  
                     if stage == 0:                           
                         BlocInterval = 15    #300
                         FixationInterval = 1 #180
@@ -715,10 +720,10 @@ def main():
                 successjar = successjar + PauseTotal
         LastDISCONNECT = DISCONNECT  
         #This portion accounts for the possibility of recording bypass.
-        if (stage == 0 or stage == 4) and RecordBypass == True:
+        if (stage == 0 or stage == 5) and RecordBypass == True:
             if pausetime == True: #Inelegant; make a module for this later so as to encompass keypresses
                 pausetime = False
-
+                RecordBypass = False # Can't have the recordbypass triggering prematurely for the second recording.
                 if stage == 1 or stage == 2 or stage == 3 or stage == 4: #This is for if there is no stored time to add in the success time jar.
 
                     if successflag == False:
@@ -761,7 +766,7 @@ def main():
         
         #Hardcoded to 300 for now, but it used to be 30 seconds.  Baseline determination.
         if time.time()+300 > countdown:
-            if stage == 2 or stage == 3 or stage == 4 or stage == 5: 
+            #if stage == 2 or stage == 3 or stage == 4 or stage == 5: 
                 if time.time() >= recordtick: 
                     recordtick = time.time()+.10  #This collects data every 250 ms.  Lower this number for higher resolution
                     consolidatedoutputNext.append(SPTruVal)
@@ -772,11 +777,11 @@ def main():
         #If the countdown timer reaches zero
         if time.time() > countdown:  
         
-            if stage == 2 or stage == 3 or stage == 4 or stage == 5:
+            #if stage == 2 or stage == 3 or stage == 4 or stage == 5:
 
-                    consolidatedoutput = consolidatedoutputNext
-                    consolidatedhi = consolidatedhiNext
-                    consolidatedlo = consolidatedloNext
+            consolidatedoutput = consolidatedoutputNext
+            consolidatedhi = consolidatedhiNext
+            consolidatedlo = consolidatedloNext
 					
             #What follows is a series of print statements that tell the administrator about previous sessions.
 			#These values are also written to a text file for future examination.
@@ -830,6 +835,7 @@ def main():
         #baselining at stages 1 and 6
         if stage == 1 or stage == 6:
             fixation(recordtick)
+            displayDEBUG(round(SPTruVal,3))
             pygame.display.update()
             FPSCLOCK.tick(FPS)
             continue
