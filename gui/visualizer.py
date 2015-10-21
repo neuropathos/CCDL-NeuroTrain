@@ -70,10 +70,10 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         
         self.start_btn = wx.Button(self, wx.ID_ANY, "Start", size=(100, 25))
         self.stop_btn = wx.Button(self, wx.ID_ANY, "Stop", size=(100, 25))
-        self.Base_btn = wx.Button(self, wx.ID_ANY, "Baseline", size=(100, 25))
+        self.Next_btn = wx.Button(self, wx.ID_ANY, "Next Round", size=(100, 25))
         self.Bind(wx.EVT_BUTTON, self.on_start, self.start_btn)
         self.Bind(wx.EVT_BUTTON, self.on_stop, self.stop_btn)
-        self.Bind(wx.EVT_BUTTON, self.on_Base, self.Base_btn)
+        self.Bind(wx.EVT_BUTTON, self.on_Next, self.Next_btn)
       
         
     def on_start(self, evt):
@@ -84,14 +84,11 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         self.update_interface() 
         NFT.main()
 		
-    def on_Base(self, evt):
-        """Starts the visualizing thread"""
-        self.visualizing = True
-        visThread = threading.Thread(group=None, target=self.update_meter)
-        visThread.start()
-        self.update_interface() 
-        fixation.main()
-    
+    def on_Next(self, evt):
+        """Moves between stages of the program"""
+        #if NFT.pausetime == True and NFT.stage != 0: 
+        NFT.NEXT = True
+        
     def on_stop(self, evt):
         """Stops the thread"""
         self.visualizing = False
@@ -114,7 +111,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             NFT.DISCONNECT = False #This reassures NFT that the user is connected.
             if self.visualizing:
                 self.start_btn.Disable()
-                self.Base_btn.Disable()
+                self.Next_btn.Enable()
                 self.stop_btn.Enable()
                 self.meter.Enable()
                 self.meter.SetBandsColour(wx.Colour(255,0,0),
@@ -126,7 +123,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                                           wx.Colour(100,100,100))
 
                 self.start_btn.Enable()
-                self.Base_btn.Disable() #this is off for now; change to ENABLE if I have use in the future.
+                self.Next_btn.Disable() #this is off for now; change to ENABLE if I have use in the future.
                 self.stop_btn.Disable()
                 self.meter.Disable()
         else:
@@ -134,7 +131,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             self.selector.Disable()
             self.start_btn.Disable()
             self.stop_btn.Disable()
-            self.Base_btn.Disable()
+            self.Next_btn.Disable()
             self.meter.Disable()
             self.meter.SetBandsColour(wx.Colour(100,100,100),
                                       wx.Colour(100,100,100),
@@ -147,7 +144,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         box1 = wx.BoxSizer(wx.HORIZONTAL)
         box1.Add(self.start_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         box1.Add(self.stop_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        box1.Add(self.Base_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
+        box1.Add(self.Next_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
 		
         box2 = wx.BoxSizer( wx.VERTICAL )
         box2.Add(self.selector, 0, wx.EXPAND | wx.HORIZONTAL)

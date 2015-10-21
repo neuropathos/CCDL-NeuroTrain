@@ -16,13 +16,15 @@ FPS = 50
 
 #The default filename for the NFT paradigm:
 OutputFilename = 'NFT_Output.csv'
+ExperimentOutputName = 'NFT_Output_Recording.csv'
+
 
 
 
 pygame.display.init()      
 disp = pygame.display.Info()
 WINDOWWIDTH = disp.current_w    #I like the screen slightly smaller than window size for ease of portability
-WINDOWHEIGHT = disp.current_h - 100
+WINDOWHEIGHT = disp.current_h
 size = [WINDOWWIDTH,WINDOWHEIGHT]
 
 #DEBUG Defaults  (These generally are fed to Png.py from NeuroTrainer.py; if you run Png.py alone, these values are used.
@@ -45,6 +47,10 @@ FixationInterval = 189 #180 #This is extended by 8 seconds as a bandaid solution
 HighNoiseFlag = False
 LowNoiseFlag = False
 
+
+resultsarray = []
+NEXT = False
+
 #Timers and flags for continual success scoring
 FirstSuccessTimer = time.time()
 FirstSuccessFlag = False
@@ -65,6 +71,7 @@ stage = 0;
 
 # Set up the colours (RGB values)
 BLACK     = (0  ,0  ,0  )
+GREY      = (120  ,120  ,120  )
 WHITE     = (255,255,255)
 YELLOW    = (255,255,0)
 ORANGE    = (255,165,0)
@@ -225,8 +232,8 @@ def fixation(recordtick):
     DISPLAYSURF.fill(BLACK)
     
     #Draw the reticle
-    pygame.draw.line(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2), 10+WINDOWHEIGHT/2),((WINDOWWIDTH/2),WINDOWHEIGHT/2-10), (LINETHICKNESS/2))
-    pygame.draw.line(DISPLAYSURF, WHITE, ((10+WINDOWWIDTH/2),WINDOWHEIGHT/2),((WINDOWWIDTH/2 - 10),WINDOWHEIGHT/2), (LINETHICKNESS/2))
+    pygame.draw.line(DISPLAYSURF, GREY, ((WINDOWWIDTH/2), 10+WINDOWHEIGHT/2),((WINDOWWIDTH/2),WINDOWHEIGHT/2-10), (LINETHICKNESS/2))
+    pygame.draw.line(DISPLAYSURF, GREY, ((10+WINDOWWIDTH/2),WINDOWHEIGHT/2),((WINDOWWIDTH/2 - 10),WINDOWHEIGHT/2), (LINETHICKNESS/2))
     
     #Fill up the baselining array until time runs out
     if time.time() >= recordtick: 
@@ -566,6 +573,7 @@ def main():
     global OutputFilename
     global BlocInterval
     global FixationInterval
+    global NEXT
     
     #dubious
     global consolidatedloNext
@@ -583,6 +591,8 @@ def main():
     
     #This opens the file to be written to:
     f = open(OutputFilename, 'w') #This should have the custom name plugged in later;
+    ses = open(ExperimentOutputName, 'w' )
+    
     
     initialization = time.time() + 5 #5 seconds are needed for the data stream to connect properly.
     BASICFONTSIZE = 20
@@ -590,6 +600,8 @@ def main():
     BASICFONT = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
     SCOREFONT = pygame.font.Font('freesansbold.ttf', SCOREFONTSIZE)
     Level = 0 #this is the starting point of threshold challenge.
+    
+    
 
     
     # Flags for whether to quit or pause; starts paused.
@@ -638,14 +650,16 @@ def main():
             if event.type == QUIT:
                 pygame.quit()
                 f.close()
+                ses.close()
                 quittingtime = True
                 break
                 
             #This portion does keypresses
             if event.type == pygame.KEYDOWN:  #press space to terminate pauses between blocs
                 if event.key == pygame.K_SPACE:
-                    if pausetime == True:
+                    if pausetime == True and stage != 5:
                         pausetime = False
+                        NEXT == False
                         RecordBypass = False #Likely unnecessary, but I'm playing it safe for now.
                         
                         ontime = 0             #This sets the beginning period of time to zero
@@ -690,6 +704,42 @@ def main():
                         FixationInterval = 1 #180
                         print('Debug values enabled')
 
+        #The following is for when the stage is triggered by using the Visualizer interface.
+        if NEXT == True and stage != 5 and stage != 0:  
+                    if pausetime == True:
+                        pausetime = False
+                        NEXT = False
+                        RecordBypass = False #Likely unnecessary, but I'm playing it safe for now.
+                        
+                        ontime = 0             #This sets the beginning period of time to zero
+                        countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
+                        FirstSuccessTimer = time.time()
+                        score = 0
+                        successjar = 0
+                        remainder = 0
+                        recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                        consolidatedoutput = []
+                        consolidatedhi = []
+                        consolidatedlo = []
+                        consolidatedoutputNext = []
+                        consolidatedhiNext = []
+                        consolidatedloNext = []
+                        ControlCountdown = time.time()                        
+                        #This is for the baselining stages at the beginning and end
+                        if stage == 0 or stage == 5:
+                            countdown = time.time() + FixationInterval #Number of seconds for Baseline block
+                           
+                        # #This increases or decreases the threshold of the ratio, based on performance in the previous blocks
+                        #These are blocked out for now, as the thresholds should shift in other ways.
+                        # if stage == 2 or stage == 3 or stage == 4:
+                           # if ontime/BlocInterval > .6:
+                               # Threshold = Threshold + deviance/2
+                               # Level = Level + 1
+                           # elif ontime/BlocInterval < .2:
+                               # Threshold = Threshold - deviance/2
+                               # Level = Level - 1
+                        stage = stage + 1 # time to go to the next stage
+                        
         if DISCONNECT == True:
             print('DISCONNECT'+ str(round(time.time(),1)))
             if LastDISCONNECT == False:
@@ -815,6 +865,7 @@ def main():
             print("Low Freq. Noise STDev is: " + str(LoDev))
             pausetime = True
             if stage == 2 or stage == 3 or stage == 4 or stage == 5:
+                ses.write('\n') #newline for recording
                 if successflag == True:
                     remainder = time.time() - successjar
                     # print(ontime)
@@ -835,7 +886,7 @@ def main():
         #baselining at stages 1 and 6
         if stage == 1 or stage == 6:
             fixation(recordtick)
-            displayDEBUG(round(SPTruVal,3))
+            #displayDEBUG(round(SPTruVal,3))
             pygame.display.update()
             FPSCLOCK.tick(FPS)
             continue
@@ -866,8 +917,9 @@ def main():
         drawLoFreq()
         lastflag = successflag   #this is so we can compare the current success state with the previous
         
-
-         
+        #Writing things to recheck
+        ses.write(str(SPTruVal)+',')
+        
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
         if (SPTruVal < Threshold or ControlVal < Threshold) and HighNoiseFlag == False and LowNoiseFlag == False:  
@@ -909,7 +961,7 @@ def main():
         displayScore(score)
         
         #Displays debug information
-        displayDEBUG(round(SPTruVal,3))
+        #displayDEBUG(round(SPTruVal,3))
         
         
         #draws the ~*STARS*~
