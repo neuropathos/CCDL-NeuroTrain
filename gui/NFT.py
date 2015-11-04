@@ -18,8 +18,8 @@ FPS = 50
 OutputFilename = 'NFT_Output.csv'
 ExperimentOutputName = 'NFT_Output_Recording.csv'
 
-
-
+#This is for whether a file is being used for the subject's condition.
+ControlRecording = False
 
 pygame.display.init()      
 disp = pygame.display.Info()
@@ -101,7 +101,9 @@ def Pausepoint(stage, score):
     global successjar
     global Level
     global remainder
-
+    global ControlRecording
+    
+    
     #Black out everything on the screen
     DISPLAYSURF.fill(BLACK)
     
@@ -110,7 +112,7 @@ def Pausepoint(stage, score):
         if time.time() < initialization: #if I don't make a 5 scond delay, things go funny
             resultSurf = SCOREFONT.render('PLEASE WAIT WHILE INITIALIZING', True, ORANGE)
         else:
-            if CONTROL == True: resultSurf = SCOREFONT.render('START RECORDING TO BEGIN BASELINE', True, RED)
+            if CONTROL == True or ControlRecording == True: resultSurf = SCOREFONT.render('START RECORDING TO BEGIN BASELINE', True, RED)
             else: resultSurf = SCOREFONT.render('START RECORDING TO BEGIN BASELINE', True, TURQUOISE)
     if stage == 1:
         resultSurf = SCOREFONT.render('PRESS SPACE TO BEGIN STAGE 1', True, WHITE)
@@ -237,7 +239,7 @@ def fixation(recordtick):
     
     #Fill up the baselining array until time runs out
     if time.time() >= recordtick: 
-        recordtick = time.time()+.10  #This collects data every 250 ms.  Lower this number for higher resolution
+        recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
         consolidatedoutput.append(SPTruVal)
         output = sum(consolidatedoutput)/len(consolidatedoutput)
         deviance = np.std(consolidatedoutput)
@@ -409,6 +411,7 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
     global FirstSuccessFlag 
     global ContinualSuccessFlag 
     global ContinualSuccessTimer 
+    
 
     #Start by checking for success state
 
@@ -574,6 +577,15 @@ def main():
     global BlocInterval
     global FixationInterval
     global NEXT
+    global ControlRecording
+    global CB1
+    global C1 
+    global CB2
+    global C2 
+    global CB3
+    global C3 
+    global CB4
+    global C4 
     
     #dubious
     global consolidatedloNext
@@ -589,18 +601,43 @@ def main():
     recordtick = 0
     countdown = 0
     
-    #This opens the file to be written to:
+    #For the control period
+    ControlIndex = 0
+    
+    #This opens the files to be written to or read from (in the case of control):
     f = open(OutputFilename, 'w') #This should have the custom name plugged in later;
-    ses = open(ExperimentOutputName, 'w' )
+    if ControlRecording == False: ses = open(ExperimentOutputName, 'w' )
+    else: 
+        #These are the values that will be used for the imitated NFT
+        con = open(ControlFile)
+        if ControlRecording == True:
+        
+
+            CB1 = (con.readline()[:-1].split(','))
+            C1  = (con.readline()[:-1].split(','))
+            CB2 = (con.readline()[:-1].split(','))
+            C2  = (con.readline()[:-1].split(','))
+            CB3 = (con.readline()[:-1].split(','))
+            C3  = (con.readline()[:-1].split(','))
+            CB4 = (con.readline()[:-1].split(','))
+            C4  = (con.readline()[:-1].split(','))
+            print(CB1)
+            print(CB2)
+            print(CB3)
+            print(CB4)
+        
+    #5 seconds are needed for the data stream to connect properly.
+    initialization = time.time() + 5 
     
-    
-    initialization = time.time() + 5 #5 seconds are needed for the data stream to connect properly.
+    #Initializing the font values
     BASICFONTSIZE = 20
     SCOREFONTSIZE = 40 
     BASICFONT = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
     SCOREFONT = pygame.font.Font('freesansbold.ttf', SCOREFONTSIZE)
     Level = 0 #this is the starting point of threshold challenge.
     
+    #When reading from the control, this time mark will be used for a timing function:
+    ControlTimer = time.time() +.25    
     
 
     
@@ -610,7 +647,7 @@ def main():
     Disconnect = False
     LastDISCONNECT = False
     
-    #This is used in counting success time; the success time counter goes forward only if this is true
+    #This is used in counting success time; the "success time" counter goes forward only if this is true
     successflag = False
     
     #Initialize the pygame FPS clock
@@ -650,7 +687,8 @@ def main():
             if event.type == QUIT:
                 pygame.quit()
                 f.close()
-                ses.close()
+                if ControlRecording == False: ses.close()
+                else: con.close()
                 quittingtime = True
                 break
                 
@@ -668,7 +706,7 @@ def main():
                         score = 0
                         successjar = 0
                         remainder = 0
-                        recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                        recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
                         consolidatedoutput = []
                         consolidatedhi = []
                         consolidatedlo = []
@@ -717,7 +755,7 @@ def main():
                         score = 0
                         successjar = 0
                         remainder = 0
-                        recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                        recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
                         consolidatedoutput = []
                         consolidatedhi = []
                         consolidatedlo = []
@@ -752,7 +790,7 @@ def main():
                 FPSCLOCK.tick(FPS)                
                 continue
             else:  #If disconnection remains, just skip everything
-                time.sleep(.100)
+                time.sleep(.250)
                 pygame.display.flip() #needed to draw the >|<~STARS~>|<
                 pygame.display.update() #Refresh all the details that do not fall under the "flip" method. SP NOTE: I don't understand the difference very well.
                 
@@ -783,7 +821,7 @@ def main():
                 countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
                 FirstSuccessTimer = time.time()
                 score = 0
-                recordtick = time.time()+.10   #Collecting values at a 250 ms interval; decrease to up sampling rate
+                recordtick = time.time()+.25   #Collecting values at a 250 ms interval; decrease to up sampling rate
                 consolidatedoutput = []
                 consolidatedhi = []
                 consolidatedlo = []
@@ -818,7 +856,7 @@ def main():
         if time.time()+300 > countdown:
             #if stage == 2 or stage == 3 or stage == 4 or stage == 5: 
                 if time.time() >= recordtick: 
-                    recordtick = time.time()+.10  #This collects data every 250 ms.  Lower this number for higher resolution
+                    recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
                     consolidatedoutputNext.append(SPTruVal)
                     consolidatedhiNext.append(HiNoise)
                     consolidatedloNext.append(LoNoise)
@@ -828,7 +866,9 @@ def main():
         if time.time() > countdown:  
         
             #if stage == 2 or stage == 3 or stage == 4 or stage == 5:
-
+            
+            ControlIndex = 0
+            
             consolidatedoutput = consolidatedoutputNext
             consolidatedhi = consolidatedhiNext
             consolidatedlo = consolidatedloNext
@@ -839,9 +879,15 @@ def main():
             
             output = sum(consolidatedoutput)/len(consolidatedoutput)
             f.write(str(output) + ',')
+            if ControlRecording == False: ses.write(str(output) + "\n")
             Threshold = output
             print("Data Baseline is: " + str(output))
             
+            if ControlRecording == True:
+                if stage == 1: Threshold = CB1
+                if stage == 2: Threshold = CB2
+                if stage == 3: Threshold = CB3
+                if stage == 4: Threshold = CB4
             
             deviance = np.std(consolidatedoutput)
             f.write(str(deviance) + ',')
@@ -865,7 +911,7 @@ def main():
             print("Low Freq. Noise STDev is: " + str(LoDev))
             pausetime = True
             if stage == 2 or stage == 3 or stage == 4 or stage == 5:
-                ses.write('\n') #newline for recording
+                if ControlRecording == False: ses.write('\n') #newline for recording
                 if successflag == True:
                     remainder = time.time() - successjar
                     # print(ontime)
@@ -917,8 +963,35 @@ def main():
         drawLoFreq()
         lastflag = successflag   #this is so we can compare the current success state with the previous
         
-        #Writing things to recheck
-        ses.write(str(SPTruVal)+',')
+        #This is all for the control subject case. 
+        if ControlRecording == False: ses.write(str(SPTruVal)+',')
+        else:
+            if stage == 2:
+                if (len(C1) - 1) > ControlIndex:
+                    SPTruVal = len(C1) - 1
+                else:
+                    SPTruVal = C1[ControlIndex-1]
+            if stage == 3:
+                if (len(C2) - 1) > ControlIndex:
+                    SPTruVal = len(C2) - 1
+                else:
+                    SPTruVal = C1[ControlIndex-1]
+            if stage == 4:
+                if (len(C3) - 1) > ControlIndex:
+                    SPTruVal = len(C3) - 1
+                else:
+                    SPTruVal = C1[ControlIndex-1]                    
+            if stage == 5:
+                if (len(C4) - 1) > ControlIndex:
+                    SPTruVal = len(C4) - 1
+                else:
+                    SPTruVal = C1[ControlIndex-1]                    
+                    
+                    
+            if ControlTimer < time.time():
+                ControlTimer = ControlTimer + .25
+                ControlIndex = ControlIndex + 1
+
         
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
@@ -961,7 +1034,7 @@ def main():
         displayScore(score)
         
         #Displays debug information
-        #displayDEBUG(round(SPTruVal,3))
+        displayDEBUG(round(SPTruVal,3))
         
         
         #draws the ~*STARS*~

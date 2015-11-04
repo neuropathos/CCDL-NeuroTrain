@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import wx
+import os
 import wx.lib.agw.peakmeter as pm
 import numpy as np
 import scipy as sp
@@ -15,6 +16,10 @@ import fixation #probably not needed anymore;
 
 NFT.SPTruVal =  0
 SPTruFreq = 0
+
+#This is for the control loading function
+wildcard = "All files (*.*)|*.*"    \
+           "Subject output(*.csv)|*.csv|"
 
 class SingleChannelVisualizer( gui.ManagerPanel ):
     def __init__(self, parent, manager, size=(50, 25)):
@@ -71,10 +76,11 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         self.start_btn = wx.Button(self, wx.ID_ANY, "Start", size=(100, 25))
         self.stop_btn = wx.Button(self, wx.ID_ANY, "Stop", size=(100, 25))
         self.Next_btn = wx.Button(self, wx.ID_ANY, "Next Round", size=(100, 25))
+        self.LoadControl_btn = wx.Button(self, wx.ID_ANY, "Control Unset", size=(100, 25))
         self.Bind(wx.EVT_BUTTON, self.on_start, self.start_btn)
         self.Bind(wx.EVT_BUTTON, self.on_stop, self.stop_btn)
         self.Bind(wx.EVT_BUTTON, self.on_Next, self.Next_btn)
-      
+        self.Bind(wx.EVT_BUTTON, self.on_LoadControl, self.LoadControl_btn)
         
     def on_start(self, evt):
         """Starts the visualizing thread"""
@@ -83,6 +89,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         visThread.start()
         self.update_interface() 
         NFT.main()
+
 		
     def on_Next(self, evt):
         """Moves between stages of the program"""
@@ -93,6 +100,27 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         """Stops the thread"""
         self.visualizing = False
         
+    def on_LoadControl(self, evt):
+        """Moves between stages of the program"""
+        #if NFT.pausetime == True and NFT.stage != 0: 
+        dlg = wx.FileDialog(self, message="Select previous CSV ...",
+                            defaultDir=os.getcwd(), defaultFile="",
+                            wildcard=wildcard, style=wx.FD_OPEN)
+
+        dlg.SetFilterIndex(1)
+
+        # Show the dialog and retrieve the user response. If it is the OK response, 
+        # process the data.
+        if dlg.ShowModal() == wx.ID_OK:
+            fname = dlg.GetPath()
+        dlg.Destroy()
+        
+        # If the filename exists, ask for confirmation
+   
+        self.filename = fname
+        self.LoadControl_btn.SetLabel('CONTROL SET')
+        NFT.ControlFile = fname
+        NFT.ControlRecording = True
         
     def update_meter(self):
         """Updates the PeakMeter data every UPDATE secs"""
@@ -123,6 +151,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                                           wx.Colour(100,100,100))
 
                 self.start_btn.Enable()
+                self.LoadControl_btn.Enable()
                 self.Next_btn.Disable() #this is off for now; change to ENABLE if I have use in the future.
                 self.stop_btn.Disable()
                 self.meter.Disable()
@@ -145,7 +174,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         box1.Add(self.start_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         box1.Add(self.stop_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         box1.Add(self.Next_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-		
+        box1.Add(self.LoadControl_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         box2 = wx.BoxSizer( wx.VERTICAL )
         box2.Add(self.selector, 0, wx.EXPAND | wx.HORIZONTAL)
         box2.Add(box1)
