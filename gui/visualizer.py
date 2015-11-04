@@ -231,7 +231,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                 freq, density = sig.welch(self.sensor_data[:, self.channel], fs=sr, nperseg = nperseg,
                                           noverlap = noverlap, scaling='density')
                                           
-            print(np.amax(self.sensor_data[:, self.channel]))
+            #print(np.amax(self.sensor_data[:, self.channel]))
             density = sp.log(density)[1:]
             freq = freq[1:]
             self.meter.SetData(density[0:32], offset=0, size=32)

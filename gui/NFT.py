@@ -15,8 +15,8 @@ LastDISCONNECT = False  #so current and previous states can be compared
 FPS = 50
 
 #The default filename for the NFT paradigm:
-OutputFilename = 'NFT_Output.csv'
-ExperimentOutputName = 'NFT_Output_Recording.csv'
+OutputFilename = 'NFT_MetaData.csv'
+ExperimentOutputName = 'NFT_ContRec.csv'
 
 #This is for whether a file is being used for the subject's condition.
 ControlRecording = False
@@ -35,7 +35,8 @@ LoDev = 0.5         #DEBUG default for stdev of Lo noise freq baseline data
 Threshold = 1.0     #EEG threshold for changing NFT parameter
 HiNoise = 1.0       #High amplitude noise amplitude; Dummy value for the electrode
 LoNoise = 1.0       #Low amplitude noise; Dummy value for the electrode
-SPTruVal = 0        #Signal amplitude; Dummy value for the electrode
+TargetVal = 0        #Signal amplitude; Dummy value for the electrode
+SPTruVal = 0        #Value that gets exported from the visualizer
 successjar = 0
 CONTROL = False     #This decides whether this running of the experiment is real or not.
 
@@ -240,7 +241,7 @@ def fixation(recordtick):
     #Fill up the baselining array until time runs out
     if time.time() >= recordtick: 
         recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
-        consolidatedoutput.append(SPTruVal)
+        consolidatedoutput.append(TargetVal)
         output = sum(consolidatedoutput)/len(consolidatedoutput)
         deviance = np.std(consolidatedoutput)
         
@@ -381,7 +382,7 @@ def drawcircle(): #this is the outline of the threshold.
 
 #This code makes the circle which reflects actual EEG power
 def drawpowercircle(): #this reflects actual NFT correlates; The fourth index in circle is the radius.  
-    multiplier = (SPTruVal-Threshold)/deviation         #This means, look at the current number of standard deviations from baseline
+    multiplier = (TargetVal-Threshold)/deviation         #This means, look at the current number of standard deviations from baseline
     if multiplier > 2:  #no more than 2 standard deviations allowed.
         multiplier = 2
     if multiplier < -2:
@@ -415,7 +416,7 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
 
     #Start by checking for success state
 
-    if SPTruVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False:
+    if TargetVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False:
         if FirstSuccessFlag == False:       #Sees if the first round has begun;this just sets the first timer, really.
             if time.time() > ContinualSuccessTimer: #Make sure previous successes do not allow rapid-fire point generation
                 FirstSuccessFlag = True 
@@ -449,8 +450,8 @@ def displayScore(score):
     DISPLAYSURF.blit(resultSurf, resultRect)
 
 	
-#Displays debugging stuff; the calling of SPTruVal here is kind of an artifact, ignore it I think
-def displayDEBUG(SPTruVal):
+#Displays debugging stuff; the calling of TargetVal here is kind of an artifact, ignore it I think
+def displayDEBUG(TargetVal):
     resultSurf = BASICFONT.render('FirstTimer = %s' %(round(FirstSuccessTimer-time.time(),3)), True, WHITE)
     resultRect = resultSurf.get_rect()
     resultRect.topleft = (WINDOWWIDTH - 300, 25)
@@ -511,7 +512,7 @@ def displayDEBUG(SPTruVal):
     DISPLAYSURF.blit(resultSurf, resultRect)
     
     
-    resultSurf = BASICFONT.render('Sign = %s' %(round(SPTruVal,1)), True, WHITE)
+    resultSurf = BASICFONT.render('Sign = %s' %(round(TargetVal,3)), True, WHITE)
     resultRect = resultSurf.get_rect()
     resultRect.topleft = (WINDOWWIDTH - 165, 220)
     DISPLAYSURF.blit(resultSurf, resultRect)
@@ -570,7 +571,7 @@ def main():
     global ContinualSuccessTimer
     global FirstSuccessTimer
     global CONTROL
-    global SPTruVal
+    global TargetVal
     global remainder
     global countdown
     global OutputFilename
@@ -613,14 +614,18 @@ def main():
         if ControlRecording == True:
         
 
-            CB1 = (con.readline()[:-1].split(','))
+            CB1 = float((con.readline()[:-1].split(','))[0])
             C1  = (con.readline()[:-1].split(','))
-            CB2 = (con.readline()[:-1].split(','))
+            C1 = [float(i) for i in C1]
+            CB2 = float((con.readline()[:-1].split(','))[0])
             C2  = (con.readline()[:-1].split(','))
-            CB3 = (con.readline()[:-1].split(','))
+            C2 = [float(i) for i in C2]
+            CB3 = float((con.readline()[:-1].split(','))[0])
             C3  = (con.readline()[:-1].split(','))
-            CB4 = (con.readline()[:-1].split(','))
+            C3 = [float(i) for i in C3]
+            CB4 = float((con.readline()[:-1].split(','))[0])
             C4  = (con.readline()[:-1].split(','))
+            C4 = [float(i) for i in C4]
             print(CB1)
             print(CB2)
             print(CB3)
@@ -742,6 +747,9 @@ def main():
                         FixationInterval = 1 #180
                         print('Debug values enabled')
 
+                        
+        #This checks SPTruVal, which it should be receiving from the Visualizer script.
+        TargetVal = SPTruVal
         #The following is for when the stage is triggered by using the Visualizer interface.
         if NEXT == True and stage != 5 and stage != 0:  
                     if pausetime == True:
@@ -857,7 +865,7 @@ def main():
             #if stage == 2 or stage == 3 or stage == 4 or stage == 5: 
                 if time.time() >= recordtick: 
                     recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
-                    consolidatedoutputNext.append(SPTruVal)
+                    consolidatedoutputNext.append(TargetVal)
                     consolidatedhiNext.append(HiNoise)
                     consolidatedloNext.append(LoNoise)
 
@@ -880,6 +888,7 @@ def main():
             output = sum(consolidatedoutput)/len(consolidatedoutput)
             f.write(str(output) + ',')
             if ControlRecording == False: ses.write(str(output) + "\n")
+            print('A return character has been entered.')
             Threshold = output
             print("Data Baseline is: " + str(output))
             
@@ -911,7 +920,7 @@ def main():
             print("Low Freq. Noise STDev is: " + str(LoDev))
             pausetime = True
             if stage == 2 or stage == 3 or stage == 4 or stage == 5:
-                if ControlRecording == False: ses.write('\n') #newline for recording
+                if ControlRecording == False: ses.write(str(Threshold) + '\n') #newline for recording
                 if successflag == True:
                     remainder = time.time() - successjar
                     # print(ontime)
@@ -932,7 +941,7 @@ def main():
         #baselining at stages 1 and 6
         if stage == 1 or stage == 6:
             fixation(recordtick)
-            #displayDEBUG(round(SPTruVal,3))
+            #displayDEBUG(round(TargetVal,3))
             pygame.display.update()
             FPSCLOCK.tick(FPS)
             continue
@@ -948,15 +957,7 @@ def main():
         #Let's make the stage 
         drawArena()
 
-        #This is for the CONTROL condition:
-        if CONTROL == True:
-            if ControlCountdown <= time.time():
-                a = randrange(1,100)
-                a = a - stage*5
-                if a < 30: ControlVal = Threshold - 1
-                else: ControlVal = Threshold + 1
-                ControlCountdown = time.time() + (randrange(4, 20)*0.1)
-        else: ControlVal = SPTruVal
+
         
         #This draws the bar graphs for high and low band noises
         drawHighFreq()
@@ -964,38 +965,48 @@ def main():
         lastflag = successflag   #this is so we can compare the current success state with the previous
         
         #This is all for the control subject case. 
-        if ControlRecording == False: ses.write(str(SPTruVal)+',')
+        if ControlRecording == False: ses.write(str(TargetVal)+',')
         else:
             if stage == 2:
-                if (len(C1) - 1) > ControlIndex:
-                    SPTruVal = len(C1) - 1
+                if (len(C1) - 1) < ControlIndex:
+                    TargetVal = C1[len(C1) - 1]
                 else:
-                    SPTruVal = C1[ControlIndex-1]
+                    TargetVal = C1[ControlIndex-1]
             if stage == 3:
-                if (len(C2) - 1) > ControlIndex:
-                    SPTruVal = len(C2) - 1
+                if (len(C2) - 1) < ControlIndex:
+                    TargetVal = C2[len(C2) - 1]
                 else:
-                    SPTruVal = C1[ControlIndex-1]
+                    TargetVal = C2[ControlIndex-1]
             if stage == 4:
-                if (len(C3) - 1) > ControlIndex:
-                    SPTruVal = len(C3) - 1
+                if (len(C3) - 1) < ControlIndex:
+                    TargetVal = C3[len(C3) - 1]
                 else:
-                    SPTruVal = C1[ControlIndex-1]                    
+                    TargetVal = C3[ControlIndex-1]                    
             if stage == 5:
-                if (len(C4) - 1) > ControlIndex:
-                    SPTruVal = len(C4) - 1
+                if (len(C4) - 1) < ControlIndex:
+                    TargetVal = C4[len(C4) - 1]
                 else:
-                    SPTruVal = C1[ControlIndex-1]                    
+                    TargetVal = C4[ControlIndex-1]                    
                     
                     
             if ControlTimer < time.time():
                 ControlTimer = ControlTimer + .25
                 ControlIndex = ControlIndex + 1
-
+                
+                
+        #This is for the randomized CONTROL condition:
+        if CONTROL == True:
+            if ControlCountdown <= time.time():
+                a = randrange(1,100)
+                a = a - stage*5
+                if a < 30: ControlVal = Threshold - 1
+                else: ControlVal = Threshold + 1
+                ControlCountdown = time.time() + (randrange(4, 20)*0.1)
+        else: ControlVal = TargetVal
         
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
-        if (SPTruVal < Threshold or ControlVal < Threshold) and HighNoiseFlag == False and LowNoiseFlag == False:  
+        if (TargetVal < Threshold or ControlVal < Threshold) and HighNoiseFlag == False and LowNoiseFlag == False:  
             b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
             b.image = pygame.image.load("GliderGood.png").convert_alpha()
             successflag = True 
@@ -1011,15 +1022,14 @@ def main():
             b.image = pygame.image.load("GliderRed.png").convert_alpha()
             b.rect.y	=  b.rect.y + 1
             successflag = False
-        elif SPTruVal >= Threshold or ControlVal >= Threshold:
+        elif TargetVal >= Threshold or ControlVal >= Threshold:
             b.image = pygame.image.load("Glider.png").convert_alpha()
             b.rect.y = b.rect.y + 1
             successflag = False
-        
         #This determines whether a point should be awarded
-        SPTruVal = ControlVal #This only does anything in CONTROL mode
+        TargetVal = ControlVal #This only does anything in CONTROL mode
         score = checkPointScored(score)#paddle1, ball, score, ballDirX)    
-        
+
         
         
         #COUNTING TIME ABOVE THRESHOLD
@@ -1034,7 +1044,7 @@ def main():
         displayScore(score)
         
         #Displays debug information
-        displayDEBUG(round(SPTruVal,3))
+        displayDEBUG(round(TargetVal,3))
         
         
         #draws the ~*STARS*~
