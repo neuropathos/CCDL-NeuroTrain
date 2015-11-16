@@ -265,9 +265,10 @@ class TimedSessionRecorder(ManagerPanel):
         else:
             # If the file does not exists, we can proceed
             self.filename = fname
-            NFT.OutputFilename = fname[:-4] + 'MetaData.csv'
-            NFT.ExperimentOutputName = fname[:-4] + 'ContRec.csv'
+        NFT.OutputFilename = fname[:-4] + 'MetaData.csv'
+        NFT.ExperimentOutputName = fname[:-4] + 'ContRec.csv'
         self.update_interface()
+        NFT.CustomName = True
     
     def on_abort_button(self, event):
         """Aborts a recording session by setting the recording flag to false"""

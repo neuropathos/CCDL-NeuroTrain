@@ -83,7 +83,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         self.Bind(wx.EVT_BUTTON, self.on_LoadControl, self.LoadControl_btn)
         
     def on_start(self, evt):
-        """Starts the visualizing thread"""
+        """Starts the visualizing thread""" 
         self.visualizing = True
         visThread = threading.Thread(group=None, target=self.update_meter)
         visThread.start()
@@ -149,6 +149,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                 self.meter.SetBandsColour(wx.Colour(100,100,100),
                                           wx.Colour(100,100,100),
                                           wx.Colour(100,100,100))
+
 
                 self.start_btn.Enable()
                 self.LoadControl_btn.Enable()

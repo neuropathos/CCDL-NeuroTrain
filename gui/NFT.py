@@ -14,6 +14,9 @@ LastDISCONNECT = False  #so current and previous states can be compared
 # Change this value to speed up or slow down your game
 FPS = 50
 
+#Funny variable
+CustomName = False
+
 #The default filename for the NFT paradigm:
 OutputFilename = 'NFT_MetaData.csv'
 ExperimentOutputName = 'NFT_ContRec.csv'
@@ -606,6 +609,7 @@ def main():
     ControlIndex = 0
     
     #This opens the files to be written to or read from (in the case of control):
+    print('outputfilename is ' + OutputFilename)
     f = open(OutputFilename, 'w') #This should have the custom name plugged in later;
     if ControlRecording == False: ses = open(ExperimentOutputName, 'w' )
     else: 
@@ -718,7 +722,8 @@ def main():
                         consolidatedoutputNext = []
                         consolidatedhiNext = []
                         consolidatedloNext = []
-                        ControlCountdown = time.time()                        
+                        ControlCountdown = time.time()
+                        ControlTimer = time.time()                        
                         #This is for the baselining stages at the beginning and end
                         if stage == 0 or stage == 5:
                             countdown = time.time() + FixationInterval #Number of seconds for Baseline block
@@ -770,7 +775,8 @@ def main():
                         consolidatedoutputNext = []
                         consolidatedhiNext = []
                         consolidatedloNext = []
-                        ControlCountdown = time.time()                        
+                        ControlCountdown = time.time()   
+                        ControlTimer = time.time()
                         #This is for the baselining stages at the beginning and end
                         if stage == 0 or stage == 5:
                             countdown = time.time() + FixationInterval #Number of seconds for Baseline block
@@ -992,6 +998,7 @@ def main():
             if ControlTimer < time.time():
                 ControlTimer = ControlTimer + .25
                 ControlIndex = ControlIndex + 1
+                print(ControlIndex)
                 
                 
         #This is for the randomized CONTROL condition:
