@@ -233,6 +233,9 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                                           noverlap = noverlap, scaling='density')
                                           
             #print(np.amax(self.sensor_data[:, self.channel]))
+            NFT.VoltMax = np.amax(self.sensor_data[:, self.channel])
+            NFT.VoltMedian = np.median(self.sensor_data[:, self.channel])
+            NFT.VoltMin = np.amin(self.sensor_data[:, self.channel])
             density = sp.log(density)[1:]
             freq = freq[1:]
             self.meter.SetData(density[0:32], offset=0, size=32)
@@ -243,6 +246,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
             NFT.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21])) #4-8 and 12-22
             NFT.LoNoise = SPVals[0] #1 Hz
             NFT.HiNoise = np.average(SPVals[38:58]) #40-59 Hz
+
             # print(np.amax(self.sensor_data[:,15])) #This is GyroX, 16 is GyroY.
             # print(np.amin(self.sensor_data[:,15]))
             #print(NFT.HiNoise, NFT.LoNoise, NFT.SPTruVal)

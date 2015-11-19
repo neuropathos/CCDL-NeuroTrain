@@ -14,6 +14,8 @@ LastDISCONNECT = False  #so current and previous states can be compared
 # Change this value to speed up or slow down your game
 FPS = 50
 
+
+
 #Funny variable
 CustomName = False
 
@@ -590,8 +592,10 @@ def main():
     global C3 
     global CB4
     global C4 
-    
-    #dubious
+    global VoltMedian
+    global VoltMax
+    global VoltMin
+    global VoltBaseline
     global consolidatedloNext
     global consolidatedhiNext
     global consolidatedoutputNext
@@ -644,6 +648,13 @@ def main():
     BASICFONT = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
     SCOREFONT = pygame.font.Font('freesansbold.ttf', SCOREFONTSIZE)
     Level = 0 #this is the starting point of threshold challenge.
+    
+    #These are dummy values for voltage based thresholds.
+    VoltMax = 1001
+    VoltMedian = 1000
+    VoltMin = 999
+    VoltBaseline = 1000
+    VoltMedianArrayNext = []
     
     #When reading from the control, this time mark will be used for a timing function:
     ControlTimer = time.time() +.25    
@@ -723,7 +734,8 @@ def main():
                         consolidatedhiNext = []
                         consolidatedloNext = []
                         ControlCountdown = time.time()
-                        ControlTimer = time.time()                        
+                        ControlTimer = time.time() 
+                        VoltMedianArrayNext = []
                         #This is for the baselining stages at the beginning and end
                         if stage == 0 or stage == 5:
                             countdown = time.time() + FixationInterval #Number of seconds for Baseline block
@@ -777,6 +789,7 @@ def main():
                         consolidatedloNext = []
                         ControlCountdown = time.time()   
                         ControlTimer = time.time()
+                        VoltMedianArrayNext = []
                         #This is for the baselining stages at the beginning and end
                         if stage == 0 or stage == 5:
                             countdown = time.time() + FixationInterval #Number of seconds for Baseline block
@@ -842,6 +855,9 @@ def main():
                 consolidatedoutputNext = []
                 consolidatedhiNext = []
                 consolidatedloNext = []
+                VoltMedianArray = []
+                ControlCountdown = time.time()
+                ControlTimer = time.time() 
                 
                                 #This is for the baselining stages at the beginning and end
                 if stage == 0 or stage == 5:
@@ -874,6 +890,7 @@ def main():
                     consolidatedoutputNext.append(TargetVal)
                     consolidatedhiNext.append(HiNoise)
                     consolidatedloNext.append(LoNoise)
+                    VoltMedianArrayNext.append(VoltMedian)
 
         
         #If the countdown timer reaches zero
@@ -886,6 +903,7 @@ def main():
             consolidatedoutput = consolidatedoutputNext
             consolidatedhi = consolidatedhiNext
             consolidatedlo = consolidatedloNext
+            VoltMedianArray = VoltMedianArrayNext
 					
             #What follows is a series of print statements that tell the administrator about previous sessions.
 			#These values are also written to a text file for future examination.
@@ -940,7 +958,12 @@ def main():
             f.write('\n') #New line
             b.rect.y = WINDOWHEIGHT/2
             
-          
+            
+
+            
+            #This is for the voltage values
+            VoltBaseline = np.mean(VoltMedianArray)
+            print(str(round(np.mean(VoltMedianArray), 2))+' v is the average of the Median Voltages.') #falseflag         
 
             continue
         
@@ -1017,15 +1040,7 @@ def main():
             b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
             b.image = pygame.image.load("GliderGood.png").convert_alpha()
             successflag = True 
-        elif HighNoiseFlag == True and LowNoiseFlag == True:
-            b.image = pygame.image.load("GliderRed.png").convert_alpha()
-            b.rect.y	=  b.rect.y + 1
-            successflag = False 
-        elif LowNoiseFlag == True:
-            b.image = pygame.image.load("GliderRed.png").convert_alpha()
-            b.rect.y	=  b.rect.y + 1
-            successflag = False
-        elif HighNoiseFlag == True:
+        elif LowNoiseFlag == True or HighNoiseFlag == True or VoltBaseline < VoltMin + 100 or VoltBaseline > VoltMax - 100:
             b.image = pygame.image.load("GliderRed.png").convert_alpha()
             b.rect.y	=  b.rect.y + 1
             successflag = False
@@ -1063,7 +1078,7 @@ def main():
         
         #Final draws and screen update
         drawSprite(b) #Draws the glider in his new position
-        pygame.display.flip() #needed to draw the >|<~STARS~>|<
+        pygame.display.flip() #needed to draw the >< ~STARS~ ><
         pygame.display.update() #Refresh all the details that do not fall under the "flip" method. SP NOTE: I don't understand the difference very well.
         
         FPSCLOCK.tick(FPS) #Tells the game system that it is not untouched by the inexorable march of time
