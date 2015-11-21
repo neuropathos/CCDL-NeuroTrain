@@ -84,6 +84,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         
     def on_start(self, evt):
         """Starts the visualizing thread""" 
+        self.LoadControl_btn.Disable()
         self.visualizing = True
         visThread = threading.Thread(group=None, target=self.update_meter)
         visThread.start()

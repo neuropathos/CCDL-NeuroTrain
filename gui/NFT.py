@@ -152,13 +152,12 @@ def Pausepoint(stage, score):
         pygame.draw.rect(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2+300,WINDOWHEIGHT/2+200),(-600,-400)), LINETHICKNESS)
         #screen width interval is 100; 
         
-        
         #latitude lines
         latitudes = 8 #This is the number of times to split latitudinally
         for i in range(0, latitudes):
             pygame.draw.line(DISPLAYSURF, WHITE, ((WINDOWWIDTH/2+300),WINDOWHEIGHT/2+200-int(i*400/latitudes)),((WINDOWWIDTH/2-300),WINDOWHEIGHT/2+200-int(i*400/latitudes)), int(LINETHICKNESS*.2))
             
-            increment = 15
+            increment = 20
             resultSurf = BASICFONT.render(str(i*increment), True, WHITE)
             resultRect = resultSurf.get_rect()
             resultRect.center = (WINDOWWIDTH/2-330, (WINDOWHEIGHT/2+202-int(i*400/latitudes)))
@@ -176,15 +175,16 @@ def Pausepoint(stage, score):
       
         
         if stage >= 2:
-            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 - 225, WINDOWHEIGHT/2+200-50/increment*score1], 8) #tie Windowheight to score
+            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 - 225, WINDOWHEIGHT/2+200-int(float(score1)/float(increment)*50)], 8) #tie Windowheight to score
+
             
             resultSurf = BASICFONT.render('%s Points' %(score1), True, YELLOW)
             resultRect = resultSurf.get_rect()
             resultRect.center = (WINDOWWIDTH/2-220, WINDOWHEIGHT/2+275)
             DISPLAYSURF.blit(resultSurf, resultRect)
         if stage >= 3:
-            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 - 75, WINDOWHEIGHT/2+200-50/increment*score2], 8)
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2-225),WINDOWHEIGHT/2+200-50/increment*score1),((WINDOWWIDTH/2-75),WINDOWHEIGHT/2+200-50/increment*score2), int(LINETHICKNESS*0.3)) #ie line height to previous circle
+            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 - 75, WINDOWHEIGHT/2+200-int(float(score2)/float(increment)*50)], 8)
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2-225),WINDOWHEIGHT/2+200-int(float(score1)/float(increment)*50)),((WINDOWWIDTH/2-75),WINDOWHEIGHT/2+200-int(float(score2)/float(increment)*50)), int(LINETHICKNESS*0.3)) #ie line height to previous circle
             
             resultSurf = BASICFONT.render('%s Points' %(score2), True, YELLOW)
             resultRect = resultSurf.get_rect()
@@ -193,8 +193,8 @@ def Pausepoint(stage, score):
 
             
         if stage >= 4:
-            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 + 75, WINDOWHEIGHT/2+200-50/increment*score3], 8)
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2-75),WINDOWHEIGHT/2+200-50/increment*score2),((WINDOWWIDTH/2 + 75),WINDOWHEIGHT/2+200-50/increment*score3), int(LINETHICKNESS*0.3))
+            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 + 75, WINDOWHEIGHT/2+200-int(float(score3)/float(increment)*50)], 8)
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2-75),WINDOWHEIGHT/2+200-int(float(score2)/float(increment)*50)),((WINDOWWIDTH/2 + 75),WINDOWHEIGHT/2+200-int(float(score3)/float(increment)*50)), int(LINETHICKNESS*0.3))
 
             resultSurf = BASICFONT.render('%s Points' %(score3), True, YELLOW)
             resultRect = resultSurf.get_rect()
@@ -202,8 +202,8 @@ def Pausepoint(stage, score):
             DISPLAYSURF.blit(resultSurf, resultRect)
 
         if stage >= 5:
-            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2 + 75),WINDOWHEIGHT/2+200-50/increment*score3),((WINDOWWIDTH/2 + 225),WINDOWHEIGHT/2+200-50/increment*score4), int(LINETHICKNESS*0.3))
-            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 + 225, WINDOWHEIGHT/2+200-50/increment*score4], 8)
+            pygame.draw.line(DISPLAYSURF, RED, ((WINDOWWIDTH/2 + 75),WINDOWHEIGHT/2+200-int(float(score3)/float(increment)*50)),((WINDOWWIDTH/2 + 225),WINDOWHEIGHT/2+200-int(float(score4)/float(increment)*50)), int(LINETHICKNESS*0.3))
+            pygame.draw.circle(DISPLAYSURF, RED, [WINDOWWIDTH/2 + 225, WINDOWHEIGHT/2+200-int(float(score4)/float(increment)*50)], 8)
             
             resultSurf = BASICFONT.render('%s Points' %(score4), True, YELLOW)
             resultRect = resultSurf.get_rect()
@@ -421,7 +421,7 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
 
     #Start by checking for success state
 
-    if TargetVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False:
+    if TargetVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False and VoltBaseline < VoltMin + 100 and VoltBaseline > VoltMax - 100:
         if FirstSuccessFlag == False:       #Sees if the first round has begun;this just sets the first timer, really.
             if time.time() > ContinualSuccessTimer: #Make sure previous successes do not allow rapid-fire point generation
                 FirstSuccessFlag = True 
@@ -457,6 +457,9 @@ def displayScore(score):
 	
 #Displays debugging stuff; the calling of TargetVal here is kind of an artifact, ignore it I think
 def displayDEBUG(TargetVal):
+    global VoltMax
+    global VoltMin
+    global VoltBaseline
     resultSurf = BASICFONT.render('FirstTimer = %s' %(round(FirstSuccessTimer-time.time(),3)), True, WHITE)
     resultRect = resultSurf.get_rect()
     resultRect.topleft = (WINDOWWIDTH - 300, 25)
@@ -544,6 +547,22 @@ def displayDEBUG(TargetVal):
     resultRect = resultSurf.get_rect()
     resultRect.topleft = (WINDOWWIDTH - 165, 310)
     DISPLAYSURF.blit(resultSurf, resultRect)
+    
+    resultSurf = BASICFONT.render('VMin = %s' %(round(VoltMin, 1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 340)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+    
+    resultSurf = BASICFONT.render('Vmax = %s' %(round(VoltMax, 1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 360)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+
+    resultSurf = BASICFONT.render('VBas = %s' %(round(VoltBaseline, 1)), True, WHITE)
+    resultRect = resultSurf.get_rect()
+    resultRect.topleft = (WINDOWWIDTH - 165, 380)
+    DISPLAYSURF.blit(resultSurf, resultRect)
+
     
 
     # global  
@@ -760,7 +779,7 @@ def main():
                             CONTROL = True
                 if event.key == pygame.K_p:  
                     if stage == 0:                           
-                        BlocInterval = 15    #300
+                        BlocInterval = 5    #300
                         FixationInterval = 1 #180
                         print('Debug values enabled')
 
@@ -887,7 +906,9 @@ def main():
             #if stage == 2 or stage == 3 or stage == 4 or stage == 5: 
                 if time.time() >= recordtick: 
                     recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
-                    consolidatedoutputNext.append(TargetVal)
+                    if stage == 1 or stage == 6 or (VoltBaseline < VoltMin + 100 and VoltBaseline > VoltMax - 100 and HighNoiseFlag == False and LowNoiseFlag == False):
+                        #print('Voltmin', VoltMin, 'Voltmax', VoltMax, 'VoltBaseline', VoltBaseline)
+                        consolidatedoutputNext.append(TargetVal)
                     consolidatedhiNext.append(HiNoise)
                     consolidatedloNext.append(LoNoise)
                     VoltMedianArrayNext.append(VoltMedian)
@@ -1036,14 +1057,14 @@ def main():
         
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
-        if (TargetVal < Threshold or ControlVal < Threshold) and HighNoiseFlag == False and LowNoiseFlag == False:  
+        if LowNoiseFlag == True or HighNoiseFlag == True or VoltBaseline > VoltMin + 100 or VoltBaseline < VoltMax - 100:
+            b.image = pygame.image.load("GliderRed.png").convert_alpha()
+            b.rect.y	=  b.rect.y + 1
+            successflag = False        
+        elif (TargetVal < Threshold or ControlVal < Threshold) and HighNoiseFlag == False and LowNoiseFlag == False:  
             b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
             b.image = pygame.image.load("GliderGood.png").convert_alpha()
             successflag = True 
-        elif LowNoiseFlag == True or HighNoiseFlag == True or VoltBaseline < VoltMin + 100 or VoltBaseline > VoltMax - 100:
-            b.image = pygame.image.load("GliderRed.png").convert_alpha()
-            b.rect.y	=  b.rect.y + 1
-            successflag = False
         elif TargetVal >= Threshold or ControlVal >= Threshold:
             b.image = pygame.image.load("Glider.png").convert_alpha()
             b.rect.y = b.rect.y + 1
