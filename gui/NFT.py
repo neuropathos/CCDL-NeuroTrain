@@ -47,7 +47,7 @@ CONTROL = False     #This decides whether this running of the experiment is real
 
 #These are the time intervals for the training in seconds.
 BlocInterval = 300    #300
-FixationInterval = 189 #180 #This is extended by 8 seconds as a bandaid solution to the fact that 
+FixationInterval = 189 #180 #This is extended by 9 seconds as a bandaid solution to the fact that the timing is misaligned between both paradigms.  A problem for later, I think.
 
 #Flags for high and low noise; false until noise thresholds are passed.
 HighNoiseFlag = False
@@ -230,7 +230,7 @@ def Pausepoint(stage, score):
     return score
 
     
-#BASELINE MODULE
+#BASELINING FIXATION CROSS
 def fixation(recordtick):
     global consolidatedoutput
     global consolidatedhi
@@ -244,21 +244,21 @@ def fixation(recordtick):
     pygame.draw.line(DISPLAYSURF, GREY, ((10+WINDOWWIDTH/2),WINDOWHEIGHT/2),((WINDOWWIDTH/2 - 10),WINDOWHEIGHT/2), (LINETHICKNESS/2))
     
     #Fill up the baselining array until time runs out
-    if time.time() >= recordtick: 
-        recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
-        consolidatedoutput.append(TargetVal)
-        output = sum(consolidatedoutput)/len(consolidatedoutput)
-        deviance = np.std(consolidatedoutput)
+    # if time.time() >= recordtick: 
+        # recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
+        # consolidatedoutput.append(TargetVal)
+        # output = sum(consolidatedoutput)/len(consolidatedoutput)
+        # deviance = np.std(consolidatedoutput)
         
-        #Calculate high freq noise and deviation
-        consolidatedhi.append(HiNoise)
-        HiOutput = sum(consolidatedhi)/len(consolidatedhi)
-        HiDev = np.std(consolidatedhi)
+        # #Calculate high freq noise and deviation
+        # consolidatedhi.append(HiNoise)
+        # HiOutput = sum(consolidatedhi)/len(consolidatedhi)
+        # HiDev = np.std(consolidatedhi)
         
-        #Calculate low freq noise and deviation
-        consolidatedlo.append(LoNoise)
-        HiOutput = sum(consolidatedlo)/len(consolidatedlo)
-        LoDev = np.std(consolidatedlo)
+        # #Calculate low freq noise and deviation
+        # consolidatedlo.append(LoNoise)
+        # HiOutput = sum(consolidatedlo)/len(consolidatedlo)
+        # LoDev = np.std(consolidatedlo)
         
         
 
@@ -307,7 +307,7 @@ def drawLoFreq():
     
     #We must not exceed the ceiling or the floor; and if we don't, we scale the value between 1 and 0.
     if scaledLo < .1:
-        scaledLo = .1
+        scaledLo = .1 #it's more aesthetically pleasing if there's at least a little bit of something in the bar.
     elif scaledLo > highmark - lowmark:
         scaledLo = 1
     else:
@@ -632,31 +632,7 @@ def main():
     ControlIndex = 0
     
     #This opens the files to be written to or read from (in the case of control):
-    print('outputfilename is ' + OutputFilename)
-    f = open(OutputFilename, 'w') #This should have the custom name plugged in later;
-    if ControlRecording == False: ses = open(ExperimentOutputName, 'w' )
-    else: 
-        #These are the values that will be used for the imitated NFT
-        con = open(ControlFile)
-        if ControlRecording == True:
-        
-
-            CB1 = float((con.readline()[:-1].split(','))[0])
-            C1  = (con.readline()[:-1].split(','))
-            C1 = [float(i) for i in C1]
-            CB2 = float((con.readline()[:-1].split(','))[0])
-            C2  = (con.readline()[:-1].split(','))
-            C2 = [float(i) for i in C2]
-            CB3 = float((con.readline()[:-1].split(','))[0])
-            C3  = (con.readline()[:-1].split(','))
-            C3 = [float(i) for i in C3]
-            CB4 = float((con.readline()[:-1].split(','))[0])
-            C4  = (con.readline()[:-1].split(','))
-            C4 = [float(i) for i in C4]
-            print(CB1)
-            print(CB2)
-            print(CB3)
-            print(CB4)
+   
         
     #5 seconds are needed for the data stream to connect properly.
     initialization = time.time() + 5 
@@ -791,8 +767,7 @@ def main():
                     if pausetime == True:
                         pausetime = False
                         NEXT = False
-                        RecordBypass = False #Likely unnecessary, but I'm playing it safe for now.
-                        
+                        RecordBypass = False #Likely unnecessary, but I'm playing it safe for now.                      
                         ontime = 0             #This sets the beginning period of time to zero
                         countdown = time.time() + BlocInterval #This is the number of seconds in a Glider game block; set to 300 when done debugging
                         FirstSuccessTimer = time.time()
@@ -856,6 +831,32 @@ def main():
         #This portion accounts for the possibility of recording bypass.
         if (stage == 0 or stage == 5) and RecordBypass == True:
             if pausetime == True: #Inelegant; make a module for this later so as to encompass keypresses
+                if stage == 0:
+                    print('outputfilename is ' + OutputFilename)
+                    f = open(OutputFilename, 'w') #This should have the custom name plugged in later;
+                    if ControlRecording == False: ses = open(ExperimentOutputName, 'w' )
+                    else: 
+                        #These are the values that will be used for the imitated NFT
+                        con = open(ControlFile)
+                        if ControlRecording == True:
+                        
+
+                            CB1 = float((con.readline()[:-1].split(','))[0])
+                            C1  = (con.readline()[:-1].split(','))
+                            C1 = [float(i) for i in C1]
+                            CB2 = float((con.readline()[:-1].split(','))[0])
+                            C2  = (con.readline()[:-1].split(','))
+                            C2 = [float(i) for i in C2]
+                            CB3 = float((con.readline()[:-1].split(','))[0])
+                            C3  = (con.readline()[:-1].split(','))
+                            C3 = [float(i) for i in C3]
+                            CB4 = float((con.readline()[:-1].split(','))[0])
+                            C4  = (con.readline()[:-1].split(','))
+                            C4 = [float(i) for i in C4]
+                            print(CB1)
+                            print(CB2)
+                            print(CB3)
+                            print(CB4)
                 pausetime = False
                 RecordBypass = False # Can't have the recordbypass triggering prematurely for the second recording.
                 if stage == 1 or stage == 2 or stage == 3 or stage == 4: #This is for if there is no stored time to add in the success time jar.
@@ -1087,7 +1088,7 @@ def main():
         displayScore(score)
         
         #Displays debug information
-        displayDEBUG(round(TargetVal,3))
+        #displayDEBUG(round(TargetVal,3))
         
         
         #draws the ~*STARS*~
