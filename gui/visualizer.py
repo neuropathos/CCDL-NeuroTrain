@@ -76,7 +76,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         self.start_btn = wx.Button(self, wx.ID_ANY, "Start", size=(100, 25))
         self.stop_btn = wx.Button(self, wx.ID_ANY, "Stop", size=(100, 25))
         self.Next_btn = wx.Button(self, wx.ID_ANY, "Next Round", size=(100, 25))
-        self.LoadControl_btn = wx.Button(self, wx.ID_ANY, "Control Unset", size=(100, 25))
+        self.LoadControl_btn = wx.Button(self, wx.ID_ANY, "Control (unset)", size=(100, 25))
         self.Bind(wx.EVT_BUTTON, self.on_start, self.start_btn)
         self.Bind(wx.EVT_BUTTON, self.on_stop, self.stop_btn)
         self.Bind(wx.EVT_BUTTON, self.on_Next, self.Next_btn)
@@ -119,7 +119,7 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
         # If the filename exists, ask for confirmation
    
         self.filename = fname
-        self.LoadControl_btn.SetLabel('CONTROL SET')
+        self.LoadControl_btn.SetLabel('Control (SET)')
         NFT.ControlFile = fname
         NFT.ControlRecording = True
         
@@ -227,26 +227,43 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
       
                 freqb, densityb = sig.welch(self.sensor_data[:, 12], fs=sr, nperseg = nperseg,
                                           noverlap = noverlap, scaling='density')
-                freq = (freq + freqb)/2
-                density = (density + densityb)/2
+                #All these values are extracted                           
+                NFT.VoltMax = np.amax([np.amax(self.sensor_data[:, 3]), np.amax(self.sensor_data[:, 12])])
+                NFT.VoltMedian = (np.median(self.sensor_data[:, 3]) + np.median(self.sensor_data[:, 12]))/2
+                NFT.VoltMin = np.amin([np.amin(self.sensor_data[:, 3]), np.amin(self.sensor_data[:, 12])])
+                densityF3 = sp.log(density)[1:]  
+                densityF4 = sp.log(densityb)[1:]
+                SPValsF3 = np.average(densityF3[2:7])/np.average(densityF3[10:19]) # 4-8 Hz, 12-20 Hz (You add 2 to the first  value, and +1 to the second value in these arrays)
+                SPValsF4 = np.average(densityF4[2:7])/np.average(densityF4[10:19]) # 4-8 Hz, 12-20 Hz
+                NFT.SPTruVal = np.average(SPValsF3 + SPValsF4)  
+                
+                freq = freq[1:] #not really needed anymore
+                self.meter.SetData((densityF3[0:32] + densityF4[0:32])/2, offset=0, size=32)
+                SPFreqs = freq #this was just used for testing purposes
+                # print("TESTING")
+                # print SPFreqs[4] #this gives 5
+
+
+                NFT.LoNoise = (densityF3[0] + densityF4[0])/2 #1 Hz
+                NFT.HiNoise = (np.average(densityF3[38:58]) + np.average(densityF4[38-58]))/2 #40-59 Hz
+
             else: #This is for all single channels
                 freq, density = sig.welch(self.sensor_data[:, self.channel], fs=sr, nperseg = nperseg,
                                           noverlap = noverlap, scaling='density')
                                           
-            #print(np.amax(self.sensor_data[:, self.channel]))
-            NFT.VoltMax = np.amax(self.sensor_data[:, self.channel])
-            NFT.VoltMedian = np.median(self.sensor_data[:, self.channel])
-            NFT.VoltMin = np.amin(self.sensor_data[:, self.channel])
-            density = sp.log(density)[1:]
-            freq = freq[1:]
-            self.meter.SetData(density[0:32], offset=0, size=32)
-            SPFreqs = freq
-            # print("TESTING")
-            # print SPFreqs[4] #this gives 5
-            SPVals = density
-            NFT.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:21])) #4-8 and 12-22
-            NFT.LoNoise = SPVals[0] #1 Hz
-            NFT.HiNoise = np.average(SPVals[38:58]) #40-59 Hz
+                NFT.VoltMax = np.amax(self.sensor_data[:, self.channel])
+                NFT.VoltMedian = np.median(self.sensor_data[:, self.channel])
+                NFT.VoltMin = np.amin(self.sensor_data[:, self.channel])
+                density = sp.log(density)[1:]
+                freq = freq[1:]
+                self.meter.SetData(density[0:32], offset=0, size=32)
+                SPFreqs = freq
+                # print("TESTING")
+                # print SPFreqs[4] #this gives 5
+                SPVals = density
+                NFT.SPTruVal = (np.average(SPVals[2:7])/np.average(SPVals[10:19])) #4-8 and 12-20 (You add 2 to the first  value, and +1 to the second value in these arrays)
+                NFT.LoNoise = SPVals[0] #1 Hz
+                NFT.HiNoise = np.average(SPVals[38:58]) #40-59 Hz
 
             # print(np.amax(self.sensor_data[:,15])) #This is GyroX, 16 is GyroY.
             # print(np.amin(self.sensor_data[:,15]))

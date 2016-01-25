@@ -54,6 +54,9 @@ HighNoiseFlag = False
 LowNoiseFlag = False
 
 
+#Debug
+DebugFlag = False
+
 resultsarray = []
 NEXT = False
 
@@ -421,7 +424,7 @@ def checkPointScored(score): # paddle1, ball, score, ballDirX):
 
     #Start by checking for success state
 
-    if TargetVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False and VoltBaseline < VoltMin + 100 and VoltBaseline > VoltMax - 100:
+    if TargetVal < Threshold and HighNoiseFlag == False and LowNoiseFlag == False and VoltBaseline < VoltMin + 400 and VoltBaseline > VoltMax - 400:
         if FirstSuccessFlag == False:       #Sees if the first round has begun;this just sets the first timer, really.
             if time.time() > ContinualSuccessTimer: #Make sure previous successes do not allow rapid-fire point generation
                 FirstSuccessFlag = True 
@@ -578,6 +581,7 @@ def main():
     global BASICFONT, BASICFONTSIZE
     global SCOREFONTSIZE, SCOREFONT
     
+    global DebugFlag
     global RecordBypass
     global stage
     global consolidatedoutput 
@@ -631,7 +635,7 @@ def main():
     #For the control period
     ControlIndex = 0
     
-    #This opens the files to be written to or read from (in the case of control):
+    
    
         
     #5 seconds are needed for the data stream to connect properly.
@@ -709,6 +713,8 @@ def main():
                 
             #This portion does keypresses
             if event.type == pygame.KEYDOWN:  #press space to terminate pauses between blocs
+                if event.key == pygame.K_d:
+                    DebugFlag = not DebugFlag
                 if event.key == pygame.K_SPACE:
                     if pausetime == True and stage != 5:
                         pausetime = False
@@ -902,12 +908,12 @@ def main():
         
         
         
-        #Hardcoded to 300 for now, but it used to be 30 seconds.  Baseline determination.
+        #Hardcoded to 300 for now, but it used to be 30 seconds.  This records values to determine the baseline in subsequent rounds.
         if time.time()+300 > countdown:
             #if stage == 2 or stage == 3 or stage == 4 or stage == 5: 
                 if time.time() >= recordtick: 
                     recordtick = time.time()+.25  #This collects data every 250 ms.  Lower this number for higher resolution
-                    if stage == 1 or stage == 6 or (VoltBaseline < VoltMin + 100 and VoltBaseline > VoltMax - 100 and HighNoiseFlag == False and LowNoiseFlag == False):
+                    if stage == 1 or stage == 6 or (VoltBaseline < VoltMin + 400 and VoltBaseline > VoltMax - 400 and HighNoiseFlag == False and LowNoiseFlag == False):
                         #print('Voltmin', VoltMin, 'Voltmax', VoltMax, 'VoltBaseline', VoltBaseline)
                         consolidatedoutputNext.append(TargetVal)
                     consolidatedhiNext.append(HiNoise)
@@ -915,7 +921,7 @@ def main():
                     VoltMedianArrayNext.append(VoltMedian)
 
         
-        #If the countdown timer reaches zero
+        #If the countdown timer reaches zero (in other words, if the duration of the stage is completed)
         if time.time() > countdown:  
         
             #if stage == 2 or stage == 3 or stage == 4 or stage == 5:
@@ -1058,15 +1064,15 @@ def main():
         
         #This moves our glider in accordance with the thresholds and colors him if wrong; 
         #LIKELY INEFFICIENT METHOD OF IMAGE LOADING, perhaps revisit later.
-        if LowNoiseFlag == True or HighNoiseFlag == True or VoltBaseline > VoltMin + 100 or VoltBaseline < VoltMax - 100:
+        if LowNoiseFlag == True or HighNoiseFlag == True or VoltBaseline > VoltMin + 400 or VoltBaseline < VoltMax - 400: #This describes each of the possible noise-based failure states. This is the first of 2 possible ways to be in a failure state.
             b.image = pygame.image.load("GliderRed.png").convert_alpha()
-            b.rect.y	=  b.rect.y + 1
+            b.rect.y	=  b.rect.y + 1 #It is counterintuitive, but higher numbers means lower on the screen
             successflag = False        
-        elif (TargetVal < Threshold or ControlVal < Threshold) and HighNoiseFlag == False and LowNoiseFlag == False:  
-            b.rect.y	=  b.rect.y - 1 #It is counterintuitive, but lower numbers means higher on the screen.
+        elif (TargetVal < Threshold or ControlVal < Threshold):   #This is a success state.
+            b.rect.y	=  b.rect.y - 1                 #It is counterintuitive, but lower numbers means higher on the screen.
             b.image = pygame.image.load("GliderGood.png").convert_alpha()
             successflag = True 
-        elif TargetVal >= Threshold or ControlVal >= Threshold:
+        else: #The only other possibility is that there are no noise flags, but the signal band isn't high enough to pass threshold. This is the second of 2 failure states.
             b.image = pygame.image.load("Glider.png").convert_alpha()
             b.rect.y = b.rect.y + 1
             successflag = False
@@ -1088,7 +1094,8 @@ def main():
         displayScore(score)
         
         #Displays debug information
-        #displayDEBUG(round(TargetVal,3))
+        if DebugFlag == True:
+            displayDEBUG(round(TargetVal,3))
         
         
         #draws the ~*STARS*~
