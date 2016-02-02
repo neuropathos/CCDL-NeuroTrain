@@ -231,14 +231,15 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                 NFT.VoltMax = np.amax([np.amax(self.sensor_data[:, 3]), np.amax(self.sensor_data[:, 12])])
                 NFT.VoltMedian = (np.median(self.sensor_data[:, 3]) + np.median(self.sensor_data[:, 12]))/2
                 NFT.VoltMin = np.amin([np.amin(self.sensor_data[:, 3]), np.amin(self.sensor_data[:, 12])])
-                densityF3 = sp.log(density)[1:]  
-                densityF4 = sp.log(densityb)[1:]
+                densityF3 = density[1:]  
+                densityF4 = densityb[1:]
+
                 SPValsF3 = np.average(densityF3[2:7])/np.average(densityF3[10:19]) # 4-8 Hz, 12-20 Hz (You add 2 to the first  value, and +1 to the second value in these arrays)
                 SPValsF4 = np.average(densityF4[2:7])/np.average(densityF4[10:19]) # 4-8 Hz, 12-20 Hz
                 NFT.SPTruVal = np.average(SPValsF3 + SPValsF4)  
                 
                 freq = freq[1:] #not really needed anymore
-                self.meter.SetData((densityF3[0:32] + densityF4[0:32])/2, offset=0, size=32)
+                self.meter.SetData((sp.log(densityF3[0:32]) + sp.log(densityF4[0:32]))/2, offset=0, size=32)
                 SPFreqs = freq #this was just used for testing purposes
                 # print("TESTING")
                 # print SPFreqs[4] #this gives 5
@@ -254,9 +255,9 @@ class SingleChannelVisualizer( gui.ManagerPanel ):
                 NFT.VoltMax = np.amax(self.sensor_data[:, self.channel])
                 NFT.VoltMedian = np.median(self.sensor_data[:, self.channel])
                 NFT.VoltMin = np.amin(self.sensor_data[:, self.channel])
-                density = sp.log(density)[1:]
+                #density = sp.log(density)[1:]
                 freq = freq[1:]
-                self.meter.SetData(density[0:32], offset=0, size=32)
+                self.meter.SetData(sp.log(density[0:32]), offset=0, size=32)
                 SPFreqs = freq
                 # print("TESTING")
                 # print SPFreqs[4] #this gives 5
